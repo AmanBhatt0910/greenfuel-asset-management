@@ -2,21 +2,35 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Home, Package, FileText, Repeat, BarChart, Trash2, Archive, User, Lock } from "lucide-react";
+import { 
+  Home, Package, FileText, Repeat, BarChart, Trash2, Archive, User, Lock 
+} from "lucide-react";
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   const menu = [
     { name: "Dashboard", icon: <Home size={20} />, href: "/dashboard" },
+    
+    // Assets
     { name: "Asset Inventory", icon: <Package size={20} />, href: "/dashboard/assets" },
     { name: "New Asset Registration", icon: <Package size={20} />, href: "/dashboard/assets/new" },
-    { name: "Existing Issues", icon: <FileText size={20} />, href: "/dashboard/issues" },
-    { name: "New Asset Issue", icon: <FileText size={20} />, href: "/dashboard/issues/new" },
-    { name: "Transfer Request", icon: <Repeat size={20} />, href: "/dashboard/transfers/new" },
-    { name: "Transfer History", icon: <Repeat size={20} />, href: "/dashboard/transfers/history" },
+    
+    // Issues
+    { name: "Existing Issues", icon: <FileText size={20} />, href: "/dashboard/issue" },
+    { name: "New Asset Issue", icon: <FileText size={20} />, href: "/dashboard/issue/new" },
+
+    // Transfers
+    { name: "Transfer Request", icon: <Repeat size={20} />, href: "/dashboard/transfer/new" },
+    { name: "Transfer History", icon: <Repeat size={20} />, href: "/dashboard/transfer/history" },
+
+    // History
     { name: "All History", icon: <Archive size={20} />, href: "/dashboard/history" },
+
+    // Reports
     { name: "Reports", icon: <BarChart size={20} />, href: "/dashboard/reports" },
+
+    // Garbage
     { name: "Mark Garbage", icon: <Trash2 size={20} />, href: "/dashboard/garbage" },
   ];
 
@@ -27,12 +41,13 @@ export default function Sidebar() {
 
   return (
     <aside className="h-screen w-64 bg-gray-900 text-white flex flex-col border-r border-gray-700 sticky top-0">
+      
       {/* Brand */}
       <div className="p-6 mb-4">
         <h2 className="text-3xl font-bold text-green-400 text-center">Greenfuel</h2>
       </div>
 
-      {/* Menu */}
+      {/* Scrollable Menu */}
       <div className="flex-1 overflow-y-auto px-2">
         <nav className="flex flex-col gap-2 mb-6">
           {menu.map((item, i) => {
