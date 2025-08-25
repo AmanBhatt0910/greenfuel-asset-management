@@ -1,8 +1,17 @@
 "use client";
 import { Package, UserPlus, Archive, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) router.push("/"); // redirect if not logged in
+  }, []);
+
   const stats = [
     { title: "Total Assets", count: 120, icon: <Package size={24} className="text-green-400" /> },
     { title: "Issued Assets", count: 65, icon: <UserPlus size={24} className="text-blue-400" /> },
