@@ -8,16 +8,15 @@ export default function NewAssetIssueForm() {
   const [today, setToday] = useState("");
   const [assets, setAssets] = useState([]);
   const [selectedAsset, setSelectedAsset] = useState(null);
+  const [selectedAssetCode, setSelectedAssetCode] = useState("");
 
   useEffect(() => {
-    // Generate unique Form ID once
     const now = new Date();
     const datePart = now.toISOString().split("T")[0].replace(/-/g, "");
     const randomPart = Math.floor(1000 + Math.random() * 9000);
     setFormId(`GF-IT-${datePart}-${randomPart}`);
     setToday(now.toISOString().split("T")[0]);
 
-    // Fetch assets
     const fetchAssets = async () => {
       try {
         const token = localStorage.getItem("token");
@@ -36,6 +35,7 @@ export default function NewAssetIssueForm() {
   }, []);
 
   const handleAssetChange = (assetCode) => {
+    setSelectedAssetCode(assetCode);
     const asset = assets.find((a) => a.asset_code === assetCode);
     setSelectedAsset(asset || null);
   };
@@ -47,32 +47,13 @@ export default function NewAssetIssueForm() {
       </h2>
 
       <form className="space-y-10">
-        {/* Header Section */}
+        {/* Header */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Form Code */}
-          <div className="flex flex-col">
-            <label className="mb-2 text-sm font-semibold text-gray-300">Form Code</label>
-            <input
-              type="text"
-              value={formId}
-              readOnly
-              className="bg-gray-900 border border-gray-700 rounded-md p-3 text-white"
-            />
-          </div>
-
-          {/* Date */}
-          <div className="flex flex-col">
-            <label className="mb-2 text-sm font-semibold text-gray-300">Date</label>
-            <input
-              type="date"
-              value={today}
-              readOnly
-              className="bg-gray-900 border border-gray-700 rounded-md p-3 text-white cursor-not-allowed"
-            />
-          </div>
+          <FormInput label="Form Code" value={formId} readOnly />
+          <FormInput label="Date" type="date" value={today} readOnly />
         </div>
 
-        {/* Employee Information */}
+        {/* Employee Info */}
         <div>
           <h3 className="text-lg font-semibold mb-4 text-green-400">
             Employee Information
@@ -105,6 +86,7 @@ export default function NewAssetIssueForm() {
             <FormSelect
               label="Select Asset Code"
               options={assets.map((a) => a.asset_code)}
+              value={selectedAssetCode}
               onChange={(e) => handleAssetChange(e.target.value)}
             />
             <FormInput label="Make" value={selectedAsset?.make || ""} readOnly />
@@ -122,7 +104,7 @@ export default function NewAssetIssueForm() {
           </div>
         </div>
 
-        {/* Software & Config Checklist */}
+        {/* Software & Config */}
         <div>
           <h3 className="text-lg font-semibold mb-4 text-green-400">
             Software & Config Checklist
@@ -138,11 +120,9 @@ export default function NewAssetIssueForm() {
           </div>
         </div>
 
-        {/* Policy Declaration */}
+        {/* Policy */}
         <div className="bg-gray-900 border border-gray-700 rounded-xl p-6">
-          <h3 className="text-lg font-semibold mb-4 text-green-400">
-            Policy Declaration
-          </h3>
+          <h3 className="text-lg font-semibold mb-4 text-green-400">Policy Declaration</h3>
           <p className="text-gray-300 text-sm mb-4">
             I acknowledge receipt of the assets mentioned above and agree that
             the IT assets and software installed will be used for Company
@@ -158,9 +138,7 @@ export default function NewAssetIssueForm() {
 
         {/* Additional Info */}
         <div>
-          <h3 className="text-lg font-semibold mb-4 text-green-400">
-            Additional Information
-          </h3>
+          <h3 className="text-lg font-semibold mb-4 text-green-400">Additional Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormInput label="Hostname" placeholder="HOST-1234" />
             <FormInput label="Old Laptop Serial No" placeholder="Old SN" />
@@ -168,7 +146,6 @@ export default function NewAssetIssueForm() {
           <FormInput label="User Remarks" placeholder="Any remarks..." />
         </div>
 
-        {/* Submit Button */}
         <div className="flex justify-end">
           <button
             type="submit"
