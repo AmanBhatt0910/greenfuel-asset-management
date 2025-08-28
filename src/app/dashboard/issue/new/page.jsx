@@ -14,7 +14,7 @@ export default function NewAssetIssueForm() {
     const now = new Date();
     const datePart = now.toISOString().split("T")[0].replace(/-/g, "");
     const randomPart = Math.floor(1000 + Math.random() * 9000);
-    setFormId(`GF-IT-F-03-${datePart}-${randomPart}`);
+    setFormId(`GF-IT-${datePart}-${randomPart}`);
     setToday(now.toISOString().split("T")[0]);
 
     // Fetch assets
@@ -49,8 +49,27 @@ export default function NewAssetIssueForm() {
       <form className="space-y-10">
         {/* Header Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <FormInput label="Form Code" value={formId} readOnly />
-          <FormInput label="Date" type="date" value={today} readOnly />
+          {/* Form Code */}
+          <div className="flex flex-col">
+            <label className="mb-2 text-sm font-semibold text-gray-300">Form Code</label>
+            <input
+              type="text"
+              value={formId}
+              readOnly
+              className="bg-gray-900 border border-gray-700 rounded-md p-3 text-white"
+            />
+          </div>
+
+          {/* Date */}
+          <div className="flex flex-col">
+            <label className="mb-2 text-sm font-semibold text-gray-300">Date</label>
+            <input
+              type="date"
+              value={today}
+              readOnly
+              className="bg-gray-900 border border-gray-700 rounded-md p-3 text-white cursor-not-allowed"
+            />
+          </div>
         </div>
 
         {/* Employee Information */}
