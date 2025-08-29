@@ -57,7 +57,7 @@ export default function NewAssetIssueForm() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("/api/issue", {
+      const res = await fetch("/api/issues", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
