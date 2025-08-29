@@ -1,4 +1,3 @@
-// app/dashboard/issues/page.jsx
 "use client";
 import { useEffect, useState } from "react";
 import { Eye, RotateCcw } from "lucide-react";
@@ -11,11 +10,21 @@ export default function AssetIssuesList() {
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        const res = await fetch("/api/issues");
-        if (res.ok) {
-          const data = await res.json();
-          setIssues(data);
+        const token = localStorage.getItem("token");
+        const res = await fetch("/api/issues", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error("Unauthorized or failed to fetch issues");
         }
+
+        const data = await res.json();
+        setIssues(data);
       } catch (err) {
         console.error("Failed to fetch issues", err);
       } finally {
