@@ -24,20 +24,36 @@ export async function GET(req, { params }) {
   }
 }
 
-// Update transfer status
+// Update transfer status (and issues if Approved)
 export async function PATCH(req, { params }) {
   try {
     const { id } = params;
-    const { status } = await req.json();
+    const body = await req.json();
+    const { status, to_emp_code, to_emp_name, to_department, to_division, to_location } = body;
 
     if (!["Approved", "Rejected", "Pending"].includes(status)) {
       return new Response(JSON.stringify({ error: "Invalid status" }), { status: 400 });
     }
 
+    // 1️⃣ Update transfer status
     const [result] = await pool.query("UPDATE transfers SET status = ? WHERE id = ?", [status, id]);
-
     if (result.affectedRows === 0) {
       return new Response(JSON.stringify({ error: "Transfer not found" }), { status: 404 });
+    }
+
+    // 2️⃣ If Approved, update issues table with new employee details
+    if (status === "Approved") {
+      const [transfer] = await pool.query("SELECT asset_code FROM transfers WHERE id = ?", [id]);
+      if (transfer.length > 0) {
+        const assetCode = transfer[0].asset_code;
+
+        await pool.query(
+          `UPDATE issues 
+           SET emp_code = ?, employee_name = ?, department = ?, division = ?, location = ?
+           WHERE asset_code = ?`,
+          [to_emp_code, to_emp_name, to_department, to_division, to_location, assetCode]
+        );
+      }
     }
 
     return new Response(JSON.stringify({ message: "Transfer updated" }), { status: 200 });
