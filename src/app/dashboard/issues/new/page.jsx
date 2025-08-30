@@ -69,13 +69,13 @@ export default function NewAssetIssueForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to create issue");
 
-      alert("✅ Issue created successfully!");
+      alert("Issue created successfully!");
       setFormData({});
       setSelectedAsset(null);
       setSelectedAssetCode("");
     } catch (err) {
       console.error("Error creating issue:", err);
-      alert("❌ Failed to create issue");
+      alert("Failed to create issue");
     } finally {
       setSubmitting(false);
     }

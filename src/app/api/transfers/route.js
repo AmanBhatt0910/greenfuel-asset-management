@@ -1,17 +1,52 @@
 import pool from "@/lib/db";
 
+// GET all transfers (joined with asset details)
 export async function GET() {
-  const [rows] = await pool.query("SELECT * FROM transfers");
-  return new Response(JSON.stringify(rows), { status: 200 });
+  try {
+    const [rows] = await pool.query(`
+      SELECT t.id, t.asset_code, t.from_emp_code, t.to_emp_code, 
+             t.transfer_date, t.status, a.make, a.model, a.serial_no
+      FROM transfers t
+      LEFT JOIN assets a ON t.asset_code = a.asset_code
+      ORDER BY t.created_at DESC
+    `);
+    return new Response(JSON.stringify(rows), { status: 200 });
+  } catch (error) {
+    console.error("GET /api/transfers error:", error);
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  }
 }
 
+// POST a new transfer request
 export async function POST(req) {
-  const data = await req.json();
-  const query = `
-    INSERT INTO transfers (from_emp_code, to_emp_code, asset_code, transfer_date, status)
-    VALUES (?, ?, ?, ?, ?)
-  `;
-  const values = [data.from_emp_code, data.to_emp_code, data.asset_code, data.transfer_date, data.status];
-  await pool.query(query, values);
-  return new Response(JSON.stringify({ message: "Transfer created" }), { status: 201 });
+  try {
+    const data = await req.json();
+
+    // Format date properly
+    const transferDate = data.transfer_date
+      ? new Date(data.transfer_date).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0];
+
+    const query = `
+      INSERT INTO transfers (from_emp_code, to_emp_code, asset_code, transfer_date, status)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    const values = [
+      data.from_emp_code,
+      data.to_emp_code,
+      data.asset_code,
+      transferDate,
+      data.status || "Pending",
+    ];
+
+    const [result] = await pool.query(query, values);
+
+    return new Response(
+      JSON.stringify({ message: "Transfer created", id: result.insertId }),
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("POST /api/transfers error:", error);
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  }
 }

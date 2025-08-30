@@ -1,36 +1,36 @@
-// app/dashboard/transfers/history/page.jsx
+"use client";
+import { useEffect, useState } from "react";
 import { Clock, CheckCircle, XCircle } from "lucide-react";
 
 export default function AssetTransferHistory() {
-  const transfers = [
-    {
-      assetCode: "GF001",
-      make: "Dell Latitude 3420",
-      serial: "SN12345",
-      from: "Amit Sharma (IT)",
-      to: "Priya Singh (Finance)",
-      date: "2025-08-20",
-      status: "Approved",
-    },
-    {
-      assetCode: "GF002",
-      make: "HP EliteBook 840",
-      serial: "SN67890",
-      from: "Ravi Verma (Sales)",
-      to: "Kiran Rao (Marketing)",
-      date: "2025-08-21",
-      status: "Pending",
-    },
-    {
-      assetCode: "GF003",
-      make: "Lenovo ThinkPad T14",
-      serial: "SN99887",
-      from: "Sunita Mehra (HR)",
-      to: "Anil Kapoor (Operations)",
-      date: "2025-08-23",
-      status: "Rejected",
-    },
-  ];
+  const [transfers, setTransfers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    async function fetchTransfers() {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch("/api/transfers", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch transfers");
+
+        const data = await res.json();
+        setTransfers(data);
+      } catch (err) {
+        console.error("Failed to load transfers:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTransfers();
+  }, []);
 
   const statusColors = {
     Approved: "text-green-400",
@@ -44,6 +44,13 @@ export default function AssetTransferHistory() {
     Rejected: <XCircle size={16} className="inline mr-1" />,
   };
 
+  const filtered = transfers.filter(
+    (t) =>
+      t.asset_code?.toLowerCase().includes(search.toLowerCase()) ||
+      t.make?.toLowerCase().includes(search.toLowerCase()) ||
+      t.model?.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
     <div className="p-6 bg-black min-h-screen text-white">
       {/* Header */}
@@ -52,54 +59,55 @@ export default function AssetTransferHistory() {
         <input
           type="text"
           placeholder="Search transfers..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
           className="px-4 py-2 rounded-lg bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
         />
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-xl border border-gray-700">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-gray-800 text-gray-300 uppercase text-xs">
-            <tr>
-              <th className="px-6 py-3">Asset Code</th>
-              <th className="px-6 py-3">Make/Model</th>
-              <th className="px-6 py-3">Serial No</th>
-              <th className="px-6 py-3">From</th>
-              <th className="px-6 py-3">To</th>
-              <th className="px-6 py-3">Date</th>
-              <th className="px-6 py-3">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transfers.map((t, i) => (
-              <tr
-                key={i}
-                className="border-b border-gray-700 hover:bg-gray-800 transition-all"
-              >
-                <td className="px-6 py-3">{t.assetCode}</td>
-                <td className="px-6 py-3">{t.make}</td>
-                <td className="px-6 py-3">{t.serial}</td>
-                <td className="px-6 py-3">{t.from}</td>
-                <td className="px-6 py-3">{t.to}</td>
-                <td className="px-6 py-3">{t.date}</td>
-                <td className={`px-6 py-3 font-semibold ${statusColors[t.status]}`}>
-                  {statusIcons[t.status]} {t.status}
-                </td>
+      {loading ? (
+        <p>Loading transfers...</p>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-gray-700">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-gray-800 text-gray-300 uppercase text-xs">
+              <tr>
+                <th className="px-6 py-3">Asset Code</th>
+                <th className="px-6 py-3">Make/Model</th>
+                <th className="px-6 py-3">Serial No</th>
+                <th className="px-6 py-3">From</th>
+                <th className="px-6 py-3">To</th>
+                <th className="px-6 py-3">Date</th>
+                <th className="px-6 py-3">Status</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-end mt-6">
-        <button className="px-4 py-2 bg-gray-800 text-gray-400 rounded-lg hover:bg-gray-700">
-          Previous
-        </button>
-        <button className="ml-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-          Next
-        </button>
-      </div>
+            </thead>
+            <tbody>
+              {filtered.map((t, i) => (
+                <tr
+                  key={i}
+                  className="border-b border-gray-700 hover:bg-gray-800 transition-all"
+                >
+                  <td className="px-6 py-3">{t.asset_code}</td>
+                  <td className="px-6 py-3">
+                    {t.make} {t.model}
+                  </td>
+                  <td className="px-6 py-3">{t.serial_no}</td>
+                  <td className="px-6 py-3">{t.from_emp_code}</td>
+                  <td className="px-6 py-3">{t.to_emp_code}</td>
+                  <td className="px-6 py-3">
+                    {new Date(t.transfer_date).toLocaleDateString()}
+                  </td>
+                  <td
+                    className={`px-6 py-3 font-semibold ${statusColors[t.status]}`}
+                  >
+                    {statusIcons[t.status]} {t.status}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
