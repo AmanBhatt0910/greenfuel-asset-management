@@ -1,12 +1,12 @@
+// src/app/page.js
+
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import { Leaf, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
-  // Simulated router for demo
-  const router = {
-    push: (path) => console.log(`Navigating to: ${path}`)
-  };
+  const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
