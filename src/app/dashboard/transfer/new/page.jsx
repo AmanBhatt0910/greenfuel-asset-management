@@ -4,8 +4,8 @@ import FormInput from "@/components/FormInput";
 import FormSelect from "@/components/FormSelect";
 
 export default function AssetTransferRequest() {
-  const [assets, setAssets] = useState([]);
-  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [issues, setIssues] = useState([]); // store asset issues instead of assets
+  const [users, setUsers] = useState([]);
   const [selectedAssetCode, setSelectedAssetCode] = useState("");
   const [formData, setFormData] = useState({
     asset_code: "",
@@ -27,38 +27,68 @@ export default function AssetTransferRequest() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // Fetch assets on mount
+  // Fetch issues (assets with employee details) + users on mount
   useEffect(() => {
-    const fetchAssets = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-        const res = await fetch("/api/assets", {
+
+        // Fetch issues (used as assets here)
+        const resIssues = await fetch("/api/issues", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Failed to fetch assets");
-        setAssets(data);
+        const dataIssues = await resIssues.json();
+        if (!resIssues.ok) throw new Error(dataIssues.message || "Failed to fetch issues");
+        setIssues(dataIssues);
+
+        // Fetch users (for transfer-to dropdown)
+        const resUsers = await fetch("/api/users", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const dataUsers = await resUsers.json();
+        if (!resUsers.ok) throw new Error(dataUsers.message || "Failed to fetch users");
+        setUsers(dataUsers);
       } catch (err) {
-        console.error("Error fetching assets:", err);
+        console.error("Error fetching data:", err);
       }
     };
-    fetchAssets();
+    fetchData();
   }, []);
 
   const handleChange = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  // When asset is selected, populate details
+  // When asset is selected, populate asset + "from employee" details from issue record
   const handleAssetChange = (assetCode) => {
     setSelectedAssetCode(assetCode);
-    const asset = assets.find((a) => a.asset_code === assetCode);
-    setSelectedAsset(asset || null);
+    const issue = issues.find((i) => i.asset_code === assetCode);
+    if (!issue) return;
 
-    handleChange("asset_code", assetCode);
-    handleChange("make_model", asset ? `${asset.make} ${asset.model}` : "");
-    handleChange("serial_no", asset?.serial_no || "");
+    // Fill asset details
+    handleChange("asset_code", issue.asset_code);
+    handleChange("make_model", issue.make_model || "");
+    handleChange("serial_no", issue.serial_no || "");
+
+    // Fill "from employee" details
+    handleChange("from_emp_code", issue.emp_code || "");
+    handleChange("from_emp_name", issue.employee_name || "");
+    handleChange("from_department", issue.department || "");
+    handleChange("from_division", issue.division || "");
+    handleChange("from_location", issue.location || "");
+  };
+
+  // When "to employee" is selected, populate their details
+  const handleUserChange = (empCode) => {
+    const user = users.find((u) => u.emp_code === empCode);
+    if (!user) return;
+
+    handleChange("to_emp_code", user.emp_code);
+    handleChange("to_emp_name", user.employee_name);
+    handleChange("to_department", user.department || "");
+    handleChange("to_division", user.division || "");
+    handleChange("to_location", user.location || "");
   };
 
   const handleSubmit = async (e) => {
@@ -88,7 +118,8 @@ export default function AssetTransferRequest() {
         throw new Error(errData.message || "Failed to create transfer");
       }
 
-      setMessage("✅ Transfer request submitted successfully!");
+      setMessage("Transfer request submitted successfully!");
+      // Reset form
       setFormData({
         asset_code: "",
         serial_no: "",
@@ -105,10 +136,9 @@ export default function AssetTransferRequest() {
         to_location: "",
         remarks: "",
       });
-      setSelectedAsset(null);
       setSelectedAssetCode("");
     } catch (err) {
-      setMessage("❌ " + err.message);
+      setMessage("Error: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -121,116 +151,60 @@ export default function AssetTransferRequest() {
       <form onSubmit={handleSubmit} className="space-y-10">
         {/* Asset Details */}
         <div>
-          <h3 className="text-lg font-semibold mb-4 text-green-400">
-            Asset Details
-          </h3>
+          <h3 className="text-lg font-semibold mb-4 text-green-400">Asset Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormSelect
               label="Select Asset Code"
-              options={assets.map((a) => a.asset_code)}
+              options={issues.map((i) => ({
+                label: `${i.asset_code} - ${i.make_model || ""}`,
+                value: i.asset_code,
+              }))}
               value={selectedAssetCode}
               onChange={(e) => handleAssetChange(e.target.value)}
             />
-            <FormInput
-              label="Make/Model"
-              value={formData.make_model}
-              readOnly
-            />
-            <FormInput
-              label="Serial Number"
-              value={formData.serial_no}
-              readOnly
-            />
+            <FormInput label="Make/Model" value={formData.make_model} readOnly />
+            <FormInput label="Serial Number" value={formData.serial_no} readOnly />
           </div>
         </div>
 
-        {/* Transfer From */}
+        {/* Transfer From (auto-filled) */}
         <div>
-          <h3 className="text-lg font-semibold mb-4 text-green-400">
-            Transfer From
-          </h3>
+          <h3 className="text-lg font-semibold mb-4 text-green-400">Transfer From</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormInput
-              label="Employee Name"
-              value={formData.from_emp_name}
-              onChange={(e) => handleChange("from_emp_name", e.target.value)}
-            />
-            <FormInput
-              label="Emp Code"
-              value={formData.from_emp_code}
-              onChange={(e) => handleChange("from_emp_code", e.target.value)}
-            />
-            <FormSelect
-              label="Department"
-              value={formData.from_department}
-              onChange={(e) => handleChange("from_department", e.target.value)}
-              options={[
-                "IT","HR","Finance","Operations","Sales",
-                "Marketing","Quality","Admin",
-              ]}
-            />
-            <FormSelect
-              label="Division"
-              value={formData.from_division}
-              onChange={(e) => handleChange("from_division", e.target.value)}
-              options={[
-                "CNG","BATTERY","INDORE","CORPORATE","GUJARAT",
-              ]}
-            />
-            <FormInput
-              label="Location"
-              value={formData.from_location}
-              onChange={(e) => handleChange("from_location", e.target.value)}
-            />
+            <FormInput label="Employee Name" value={formData.from_emp_name} readOnly />
+            <FormInput label="Emp Code" value={formData.from_emp_code} readOnly />
+            <FormInput label="Department" value={formData.from_department} readOnly />
+            <FormInput label="Division" value={formData.from_division} readOnly />
+            <FormInput label="Location" value={formData.from_location} readOnly />
           </div>
         </div>
 
         {/* Transfer To */}
         <div>
-          <h3 className="text-lg font-semibold mb-4 text-green-400">
-            Transfer To
-          </h3>
+          <h3 className="text-lg font-semibold mb-4 text-green-400">Transfer To</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormInput
-              label="Employee Name"
-              value={formData.to_emp_name}
-              onChange={(e) => handleChange("to_emp_name", e.target.value)}
-            />
-            <FormInput
-              label="Emp Code"
+            <FormSelect
+              label="Select Employee"
+              options={users
+                .filter((u) => u.emp_code !== formData.from_emp_code) // exclude "from" person
+                .map((u) => ({
+                  label: u.employee_name,
+                  value: u.emp_code,
+                }))}
               value={formData.to_emp_code}
-              onChange={(e) => handleChange("to_emp_code", e.target.value)}
+              onChange={(e) => handleUserChange(e.target.value)}
             />
-            <FormSelect
-              label="Department"
-              value={formData.to_department}
-              onChange={(e) => handleChange("to_department", e.target.value)}
-              options={[
-                "IT","HR","Finance","Operations","Sales",
-                "Marketing","Quality","Admin",
-              ]}
-            />
-            <FormSelect
-              label="Division"
-              value={formData.to_division}
-              onChange={(e) => handleChange("to_division", e.target.value)}
-              options={[
-                "CNG","BATTERY","INDORE","CORPORATE","GUJARAT",
-              ]}
-            />
-            <FormInput
-              label="Location"
-              value={formData.to_location}
-              onChange={(e) => handleChange("to_location", e.target.value)}
-            />
+            <FormInput label="Employee Name" value={formData.to_emp_name} readOnly />
+            <FormInput label="Emp Code" value={formData.to_emp_code} readOnly />
+            <FormInput label="Department" value={formData.to_department} readOnly />
+            <FormInput label="Division" value={formData.to_division} readOnly />
+            <FormInput label="Location" value={formData.to_location} readOnly />
           </div>
         </div>
 
         {/* Reason & Remarks */}
         <div>
-          <h3 className="text-lg font-semibold mb-4 text-green-400">
-            Reason for Transfer
-          </h3>
+          <h3 className="text-lg font-semibold mb-4 text-green-400">Reason for Transfer</h3>
           <FormInput
             label="Remarks"
             value={formData.remarks}

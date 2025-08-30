@@ -9,8 +9,8 @@ export default function FormSelect({ label, options, value, onChange }) {
       >
         <option value="">Select...</option>
         {options.map((opt, i) => (
-          <option key={i} value={opt}>
-            {opt}
+          <option key={i} value={opt.value}>
+            {opt.label}
           </option>
         ))}
       </select>

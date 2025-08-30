@@ -1,7 +1,11 @@
 // app/api/users/route.js
 import pool from "@/lib/db";
+import { verifyAuth } from "@/lib/auth";
 
-export async function GET() {
+export async function GET(req) {
+  const auth = verifyAuth(req);
+    if (!auth.ok) return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+
   try {
     const [rows] = await pool.query(`
       SELECT DISTINCT 
