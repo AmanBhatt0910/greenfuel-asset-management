@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Home, Package, FileText, Repeat, BarChart, Trash2, Archive, Lock, Menu, LogOut, ChevronRight, Leaf
 } from "lucide-react";
@@ -9,6 +10,7 @@ export default function Sidebar() {
   const pathname = "/dashboard";
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -29,15 +31,15 @@ export default function Sidebar() {
 
   const accountMenu = [
     { name: "Forgot Password", icon: <Lock size={20} />, href: "/forgot-password" },
-    { name: "Logout", icon: <LogOut size={20} />, href: "/logout", isLogout: true },
+    { name: "Logout", icon: <LogOut size={20} />, href: "/", isLogout: true },
   ];
 
   const handleNavigation = (href, isLogout) => {
     if (isLogout) {
       // Handle logout logic
       console.log("Logging out...");
-      // localStorage.removeItem("token");
-      // router.push("/login");
+      localStorage.removeItem("token");
+      router.push("/");
     } else {
       console.log(`Navigating to: ${href}`);
     }
