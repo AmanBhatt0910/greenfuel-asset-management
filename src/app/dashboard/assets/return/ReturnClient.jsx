@@ -15,7 +15,7 @@ export default function ReturnClient() {
     setLoading(true);
     const token = localStorage.getItem("token");
 
-    await fetch("/api/assets/return", {
+    await fetch(`api/assets/${asset.id}/return`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
