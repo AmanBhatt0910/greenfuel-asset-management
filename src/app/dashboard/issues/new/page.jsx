@@ -31,7 +31,12 @@ export default function NewAssetIssueForm() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setAssets(data);
+
+      const availableAssets = Array.isArray(data)
+        ? data.filter((a) => a.status === "IN_STOCK")
+        : [];
+
+      setAssets(availableAssets);
     };
     fetchAssets();
   }, []);
@@ -171,8 +176,10 @@ export default function NewAssetIssueForm() {
               label="Asset Code"
               options={assets.map((a) => a.asset_code)}
               value={selectedAssetCode}
+              disabled={assets.length === 0}
               onChange={(e) => handleAssetChange(e.target.value)}
             />
+
             <FormInput label="Make" value={selectedAsset?.make || ""} readOnly />
             <FormInput label="Model" value={selectedAsset?.model || ""} readOnly />
             <FormInput label="Serial No" value={selectedAsset?.serial_no || ""} readOnly />

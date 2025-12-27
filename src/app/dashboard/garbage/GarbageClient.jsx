@@ -1,5 +1,3 @@
-// app/dashboard/garbage/GarbageClient.jsx
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -24,11 +22,11 @@ export default function GarbageClient() {
   useEffect(() => {
     const fetchAssets = async () => {
       const token = localStorage.getItem("token");
-      const res = await fetch("/api/assets?available=true", {
+      const res = await fetch("/api/assets", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setAssets(data);
+      setAssets(data.filter(a => a.status === "IN_STOCK"));
     };
     fetchAssets();
   }, []);
@@ -37,21 +35,26 @@ export default function GarbageClient() {
     e.preventDefault();
     if (!form.confirm) return alert("Please confirm garbage action");
 
+    const asset = assets.find(a => a.asset_code === form.asset_code);
+    if (!asset) return alert("Invalid asset selected");
+
     setLoading(true);
     const token = localStorage.getItem("token");
 
-    await fetch("/api/garbage", {
+    const res = await fetch(`/api/assets/${asset.id}/garbage`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        asset_code: form.asset_code,
-        reason: form.reason,
-        disposed_date: new Date().toISOString().split("T")[0],
-      }),
+      body: JSON.stringify({ reason: form.reason }),
     });
+
+    if (!res.ok) {
+      alert("Failed to mark asset as garbage");
+      setLoading(false);
+      return;
+    }
 
     router.push("/dashboard/assets");
   };
@@ -69,7 +72,7 @@ export default function GarbageClient() {
         <FormSelect
           label="Select Asset"
           value={form.asset_code}
-          options={assets.map((a) => a.asset_code)}
+          options={assets.map(a => a.asset_code)}
           onChange={(e) =>
             setForm({ ...form, asset_code: e.target.value })
           }

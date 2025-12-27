@@ -1,7 +1,5 @@
 // src/app/api/assets/route.js
 
-// src/app/api/assets/route.js
-
 import pool from "@/lib/db";
 import { verifyAuth } from "@/lib/auth";
 import { logHistory } from "@/lib/history";

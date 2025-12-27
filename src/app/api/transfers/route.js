@@ -23,41 +23,49 @@ export async function GET() {
 
 // POST a new transfer request
 export async function POST(req) {
+  const auth = verifyAuth(req);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+  }
+
   try {
     const data = await req.json();
 
-    // Format date properly
-    const transferDate = data.transfer_date
-      ? new Date(data.transfer_date).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0];
+    const [[asset]] = await pool.query(
+      `SELECT status FROM assets WHERE asset_code = ?`,
+      [data.asset_code]
+    );
 
-    const query = `
-      INSERT INTO transfers (from_emp_code, to_emp_code, asset_code, transfer_date, status)
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    const values = [
-      data.from_emp_code,
-      data.to_emp_code,
-      data.asset_code,
-      transferDate,
-      data.status || "Pending",
-    ];
+    if (!asset || asset.status !== "ISSUED") {
+      return new Response(
+        JSON.stringify({ message: "Only ISSUED assets can be transferred" }),
+        { status: 409 }
+      );
+    }
 
-    const [result] = await pool.query(query, values);
+    await pool.query(
+      `INSERT INTO transfers
+       (from_emp_code, to_emp_code, asset_code, transfer_date, status)
+       VALUES (?, ?, ?, CURDATE(), 'COMPLETED')`,
+      [data.from_emp_code, data.to_emp_code, data.asset_code]
+    );
 
     await logHistory({
       eventType: "ASSET_TRANSFERRED",
       assetCode: data.asset_code,
-      description: `Asset ${data.asset_code} transferred from ${data.from_emp_code} to ${data.to_emp_code}`,
-      performedBy: "System",
+      description: `Transferred from ${data.from_emp_code} to ${data.to_emp_code}`,
+      performedBy: auth.user?.email || "IT Admin",
     });
 
     return new Response(
-      JSON.stringify({ message: "Transfer created", id: result.insertId }),
+      JSON.stringify({ message: "Transfer completed" }),
       { status: 201 }
     );
-  } catch (error) {
-    console.error("POST /api/transfers error:", error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  } catch (err) {
+    console.error(err);
+    return new Response(
+      JSON.stringify({ message: "Failed to transfer asset" }),
+      { status: 500 }
+    );
   }
 }
