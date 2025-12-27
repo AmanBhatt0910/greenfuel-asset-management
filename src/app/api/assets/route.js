@@ -1,48 +1,113 @@
+// src/app/api/assets/route.js
+
 import pool from "@/lib/db";
 import { verifyAuth } from "@/lib/auth";
+import { logHistory } from "@/lib/history";
 
 export async function GET(req) {
   const auth = verifyAuth(req);
-  if (!auth.ok) return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+  if (!auth.ok) {
+    return new Response(
+      JSON.stringify({ message: auth.error }),
+      { status: 401 }
+    );
+  }
 
   try {
-    const [rows] = await pool.query(
-      `SELECT id, asset_code, make, model, serial_no, po_no, invoice_no, invoice_date,
-              amount, vendor, warranty_years, warranty_start, warranty_end, created_at
-       FROM assets
-       ORDER BY created_at DESC`
-    );
+    const { searchParams } = new URL(req.url);
+    const availableOnly = searchParams.get("available") === "true";
+
+    let query = `
+      SELECT 
+        a.id,
+        a.asset_code,
+        a.make,
+        a.model,
+        a.serial_no,
+        a.po_no,
+        a.invoice_no,
+        a.invoice_date,
+        a.amount,
+        a.vendor,
+        a.warranty_years,
+        a.warranty_start,
+        a.warranty_end,
+        a.created_at
+      FROM assets a
+    `;
+
+    /* If only available assets are requested */
+    if (availableOnly) {
+      query += `
+        WHERE a.asset_code NOT IN (
+          SELECT asset_code FROM issues
+        )
+      `;
+    }
+
+    query += ` ORDER BY a.created_at DESC`;
+
+    const [rows] = await pool.query(query);
+
     return new Response(JSON.stringify(rows), { status: 200 });
   } catch (err) {
-    console.error(err);
-    return new Response(JSON.stringify({ message: "Failed to fetch assets" }), { status: 500 });
+    console.error("GET /api/assets error:", err);
+    return new Response(
+      JSON.stringify({ message: "Failed to fetch assets" }),
+      { status: 500 }
+    );
   }
 }
 
+
 export async function POST(req) {
   const auth = verifyAuth(req);
-  if (!auth.ok) return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+  if (!auth.ok) {
+    return new Response(
+      JSON.stringify({ message: auth.error }),
+      { status: 401 }
+    );
+  }
 
   try {
     const data = await req.json();
+
+    /* Validation */
     const required = ["asset_code", "serial_no"];
-    for (const k of required) {
-      if (!data[k] || String(data[k]).trim() === "") {
-        return new Response(JSON.stringify({ message: `Missing field: ${k}` }), { status: 400 });
+    for (const field of required) {
+      if (!data[field] || String(data[field]).trim() === "") {
+        return new Response(
+          JSON.stringify({ message: `Missing field: ${field}` }),
+          { status: 400 }
+        );
       }
     }
 
+    /* Insert asset */
     const query = `
       INSERT INTO assets
-      (asset_code, make, model, serial_no, po_no, invoice_no, invoice_date,
-       amount, vendor, warranty_years, warranty_start, warranty_end)
+      (
+        asset_code,
+        make,
+        model,
+        serial_no,
+        po_no,
+        invoice_no,
+        invoice_date,
+        amount,
+        vendor,
+        warranty_years,
+        warranty_start,
+        warranty_end
+      )
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
+
     const values = [
-      data.asset_code || null,
+      data.asset_code,
       data.make || null,
       data.model || null,
-      data.serial_no || null,
+      data.serial_no,
       data.po_no || null,
       data.invoice_no || null,
       data.invoice_date || null,
@@ -54,9 +119,28 @@ export async function POST(req) {
     ];
 
     const [result] = await pool.query(query, values);
-    return new Response(JSON.stringify({ message: "Asset created", id: result.insertId }), { status: 201 });
+
+    /* History log */
+    await logHistory({
+      eventType: "ASSET_REGISTERED",
+      assetCode: data.asset_code,
+      assetId: result.insertId,
+      description: `Asset ${data.asset_code} registered`,
+      performedBy: auth.user?.email || "System",
+    });
+
+    return new Response(
+      JSON.stringify({
+        message: "Asset created successfully",
+        id: result.insertId,
+      }),
+      { status: 201 }
+    );
   } catch (err) {
-    console.error(err);
-    return new Response(JSON.stringify({ message: "Failed to create asset" }), { status: 500 });
+    console.error("POST /api/assets error:", err);
+    return new Response(
+      JSON.stringify({ message: "Failed to create asset" }),
+      { status: 500 }
+    );
   }
 }

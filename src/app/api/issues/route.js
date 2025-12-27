@@ -1,10 +1,12 @@
 import pool from "@/lib/db";
 import { verifyAuth } from "@/lib/auth";
+import { logHistory } from "@/lib/history";
 
 // Fetch all issues
 export async function GET(req) {
   const auth = verifyAuth(req);
-  if (!auth.ok) return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+  if (!auth.ok)
+    return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
 
   try {
     const [rows] = await pool.query(
@@ -18,18 +20,37 @@ export async function GET(req) {
     return new Response(JSON.stringify(rows), { status: 200 });
   } catch (err) {
     console.error(err);
-    return new Response(JSON.stringify({ message: "Failed to fetch issues" }), { status: 500 });
+    return new Response(
+      JSON.stringify({ message: "Failed to fetch issues" }),
+      { status: 500 }
+    );
   }
 }
 
 // Create a new issue
 export async function POST(req) {
   const auth = verifyAuth(req);
-  if (!auth.ok) return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+  if (!auth.ok)
+    return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
 
   try {
     const data = await req.json();
 
+    const [existing] = await pool.query(
+      `SELECT id FROM issues WHERE asset_code = ?`,
+      [data.asset_code]
+    );
+
+    if (existing.length > 0) {
+      return new Response(
+        JSON.stringify({
+          message: `Asset ${data.asset_code} is already issued`,
+        }),
+        { status: 409 } // Conflict
+      );
+    }
+
+    // ✅ Proceed with issue
     const query = `
       INSERT INTO issues
       (employee_name, emp_code, department, division, designation, location,
@@ -53,7 +74,7 @@ export async function POST(req) {
       data.make_model || null,
       data.serial_no || null,
       data.ip_address || null,
-      data.os_software || null, // could be a JSON string from multiple configs
+      data.os_software || null,
       data.terms || null,
       data.hostname || null,
       data.remarks || null,
@@ -61,12 +82,26 @@ export async function POST(req) {
 
     const [result] = await pool.query(query, values);
 
+    // 🧾 History log
+    await logHistory({
+      eventType: "ASSET_ISSUED",
+      assetCode: data.asset_code,
+      description: `Asset ${data.asset_code} issued to ${data.employee_name} (${data.emp_code})`,
+      performedBy: auth.user?.email || "IT Admin",
+    });
+
     return new Response(
-      JSON.stringify({ message: "Issue created successfully", id: result.insertId }),
+      JSON.stringify({
+        message: "Issue created successfully",
+        id: result.insertId,
+      }),
       { status: 201 }
     );
   } catch (err) {
     console.error(err);
-    return new Response(JSON.stringify({ message: "Failed to create issue" }), { status: 500 });
+    return new Response(
+      JSON.stringify({ message: "Failed to create issue" }),
+      { status: 500 }
+    );
   }
 }

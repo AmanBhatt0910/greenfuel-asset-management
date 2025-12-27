@@ -1,4 +1,8 @@
+// src/app/api/transfers/route.js
+
 import pool from "@/lib/db";
+import { logHistory } from "@/lib/history";
+
 
 // GET all transfers (joined with asset details)
 export async function GET() {
@@ -40,6 +44,13 @@ export async function POST(req) {
     ];
 
     const [result] = await pool.query(query, values);
+
+    await logHistory({
+      eventType: "ASSET_TRANSFERRED",
+      assetCode: data.asset_code,
+      description: `Asset ${data.asset_code} transferred from ${data.from_emp_code} to ${data.to_emp_code}`,
+      performedBy: "System",
+    });
 
     return new Response(
       JSON.stringify({ message: "Transfer created", id: result.insertId }),
