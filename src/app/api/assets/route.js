@@ -1,9 +1,14 @@
 // src/app/api/assets/route.js
 
+// src/app/api/assets/route.js
+
 import pool from "@/lib/db";
 import { verifyAuth } from "@/lib/auth";
 import { logHistory } from "@/lib/history";
 
+/* ============================
+   GET — Fetch assets
+============================ */
 export async function GET(req) {
   const auth = verifyAuth(req);
   if (!auth.ok) {
@@ -18,37 +23,32 @@ export async function GET(req) {
     const availableOnly = searchParams.get("available") === "true";
 
     let query = `
-      SELECT 
-        a.id,
-        a.asset_code,
-        a.make,
-        a.model,
-        a.serial_no,
-        a.po_no,
-        a.invoice_no,
-        a.invoice_date,
-        a.amount,
-        a.vendor,
-        a.warranty_years,
-        a.warranty_start,
-        a.warranty_end,
-        a.created_at
-      FROM assets a
+      SELECT
+        id,
+        asset_code,
+        make,
+        model,
+        serial_no,
+        po_no,
+        invoice_no,
+        invoice_date,
+        amount,
+        vendor,
+        warranty_years,
+        warranty_start,
+        warranty_end,
+        status,
+        created_at
+      FROM assets
     `;
 
-    /* If only available assets are requested */
     if (availableOnly) {
-      query += `
-        WHERE a.asset_code NOT IN (
-          SELECT asset_code FROM issues
-        )
-      `;
+      query += ` WHERE status = 'IN_STOCK'`;
     }
 
-    query += ` ORDER BY a.created_at DESC`;
+    query += ` ORDER BY created_at DESC`;
 
     const [rows] = await pool.query(query);
-
     return new Response(JSON.stringify(rows), { status: 200 });
   } catch (err) {
     console.error("GET /api/assets error:", err);
@@ -59,7 +59,9 @@ export async function GET(req) {
   }
 }
 
-
+/* ============================
+   POST — Register asset
+============================ */
 export async function POST(req) {
   const auth = verifyAuth(req);
   if (!auth.ok) {
@@ -72,7 +74,6 @@ export async function POST(req) {
   try {
     const data = await req.json();
 
-    /* Validation */
     const required = ["asset_code", "serial_no"];
     for (const field of required) {
       if (!data[field] || String(data[field]).trim() === "") {
@@ -83,7 +84,6 @@ export async function POST(req) {
       }
     }
 
-    /* Insert asset */
     const query = `
       INSERT INTO assets
       (
@@ -98,9 +98,10 @@ export async function POST(req) {
         vendor,
         warranty_years,
         warranty_start,
-        warranty_end
+        warranty_end,
+        status
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'IN_STOCK')
     `;
 
     const values = [
@@ -120,7 +121,6 @@ export async function POST(req) {
 
     const [result] = await pool.query(query, values);
 
-    /* History log */
     await logHistory({
       eventType: "ASSET_REGISTERED",
       assetCode: data.asset_code,
