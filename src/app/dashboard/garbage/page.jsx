@@ -1,51 +1,108 @@
 // app/dashboard/garbage/page.jsx
+
+"use client";
+
+import { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import FormInput from "@/components/FormInput";
 import FormSelect from "@/components/FormSelect";
-import { Trash2 } from "lucide-react";
 
 export default function MarkGarbage() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const presetAsset = params.get("asset");
+
+  const [assets, setAssets] = useState([]);
+  const [form, setForm] = useState({
+    asset_code: presetAsset || "",
+    reason: "",
+    confirm: false,
+  });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchAssets = async () => {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/assets?available=true", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setAssets(data);
+    };
+    fetchAssets();
+  }, []);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!form.confirm) return alert("Please confirm garbage action");
+
+    setLoading(true);
+    const token = localStorage.getItem("token");
+
+    await fetch("/api/garbage", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        asset_code: form.asset_code,
+        reason: form.reason,
+        disposed_date: new Date().toISOString().split("T")[0],
+      }),
+    });
+
+    router.push("/dashboard/assets");
+  };
+
   return (
-    <div className="p-6 bg-black min-h-screen text-white">
-      <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-        <Trash2 size={24} className="text-red-400" /> Mark Asset as Garbage
+    <div className="max-w-2xl space-y-6">
+      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <Trash2 className="text-red-400" /> Mark Asset as Garbage
       </h2>
 
-      <form className="space-y-8">
-        {/* Asset Selection */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4 text-green-400">Asset Details</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormSelect
-              label="Select Asset"
-              options={["GF001 - Dell Latitude 3420", "GF002 - HP EliteBook 840", "GF003 - Lenovo ThinkPad T14"]}
-            />
-            <FormInput label="Serial Number" placeholder="Enter Serial Number" />
-          </div>
-        </div>
+      <form
+        onSubmit={submit}
+        className="bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-6"
+      >
+        <FormSelect
+          label="Select Asset"
+          value={form.asset_code}
+          options={assets.map((a) => a.asset_code)}
+          onChange={(e) =>
+            setForm({ ...form, asset_code: e.target.value })
+          }
+        />
 
-        {/* Reason for Garbage */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4 text-green-400">Reason</h3>
-          <FormInput label="Remarks / Reason" placeholder="Enter reason why asset is marked as garbage" />
-        </div>
+        <FormInput
+          label="Reason / Remarks"
+          placeholder="Damaged, obsolete, end of life…"
+          value={form.reason}
+          onChange={(e) =>
+            setForm({ ...form, reason: e.target.value })
+          }
+        />
 
-        {/* Confirmation */}
-        <div className="bg-gray-900 border border-gray-700 rounded-xl p-6">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" className="w-4 h-4 text-red-500" />
-            <span className="text-gray-300 text-sm">
-              I confirm that this asset is permanently unusable and should be marked as garbage.
-            </span>
-          </label>
-        </div>
+        <label className="flex items-center gap-2 text-sm text-gray-300">
+          <input
+            type="checkbox"
+            className="accent-red-500"
+            checked={form.confirm}
+            onChange={(e) =>
+              setForm({ ...form, confirm: e.target.checked })
+            }
+          />
+          I confirm this asset is permanently unusable.
+        </label>
 
-        {/* Submit Button */}
         <div className="flex justify-end">
           <button
             type="submit"
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-semibold shadow-lg transition-all"
+            disabled={loading}
+            className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-semibold disabled:opacity-50"
           >
-            Mark as Garbage
+            {loading ? "Processing..." : "Mark as Garbage"}
           </button>
         </div>
       </form>

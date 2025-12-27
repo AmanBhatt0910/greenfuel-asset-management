@@ -1,10 +1,34 @@
 // src/app/dashboard/assets/page.jsx
 
 "use client";
+
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Eye, Edit } from "lucide-react";
+import {
+  Eye,
+  Edit,
+  UserPlus,
+  ArrowRightLeft,
+  Trash2,
+  RotateCcw,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
+
+const StatusBadge = ({ status }) => {
+  const styles = {
+    IN_STOCK: "bg-green-500/10 text-green-400 border-green-500/30",
+    ISSUED: "bg-blue-500/10 text-blue-400 border-blue-500/30",
+    GARBAGE: "bg-red-500/10 text-red-400 border-red-500/30",
+  };
+
+  return (
+    <span
+      className={`px-2 py-0.5 rounded-md text-xs border ${styles[status]}`}
+    >
+      {status.replace("_", " ")}
+    </span>
+  );
+};
 
 export default function AssetsPage() {
   const router = useRouter();
@@ -38,6 +62,7 @@ export default function AssetsPage() {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
+      {/* Header */}
       <div>
         <h2 className="text-3xl font-bold text-white">Asset Inventory</h2>
         <p className="text-gray-400 text-sm">
@@ -45,19 +70,18 @@ export default function AssetsPage() {
         </p>
       </div>
 
+      {/* Table */}
       <div className="overflow-x-auto bg-gray-900/70 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-xl">
         <table className="min-w-full text-sm">
           <thead className="bg-gray-800 text-gray-300 text-xs uppercase">
             <tr>
               {[
                 "Asset Code",
-                "Make",
-                "Model",
+                "Make / Model",
                 "Serial No",
-                "Invoice Date",
-                "Amount",
                 "Vendor",
                 "Warranty",
+                "Status",
                 "Actions",
               ].map((h) => (
                 <th key={h} className="px-6 py-4 text-left">
@@ -66,6 +90,7 @@ export default function AssetsPage() {
               ))}
             </tr>
           </thead>
+
           <tbody>
             {rows.map((r) => (
               <motion.tr
@@ -74,33 +99,91 @@ export default function AssetsPage() {
                 className="border-t border-gray-800"
               >
                 <td className="px-6 py-4 font-medium">{r.asset_code}</td>
-                <td className="px-6 py-4">{r.make}</td>
-                <td className="px-6 py-4">{r.model}</td>
-                <td className="px-6 py-4">{r.serial_no}</td>
-                <td className="px-6 py-4">{r.invoice_date?.slice(0, 10) || "-"}</td>
                 <td className="px-6 py-4">
-                  {r.amount ? `₹${Number(r.amount).toLocaleString()}` : "-"}
+                  {r.make} {r.model}
                 </td>
+                <td className="px-6 py-4">{r.serial_no}</td>
                 <td className="px-6 py-4">{r.vendor || "-"}</td>
-                <td className="px-6 py-4">{r.warranty_years ?? "-"}</td>
-                <td className="px-6 py-4 flex gap-2">
+                <td className="px-6 py-4">
+                  {r.warranty_years ? `${r.warranty_years} yrs` : "-"}
+                </td>
+                <td className="px-6 py-4">
+                  <StatusBadge status={r.status} />
+                </td>
+
+                {/* Actions */}
+                <td className="px-6 py-4 flex flex-wrap gap-2">
                   <button
                     onClick={() =>
                       router.push(`/dashboard/assets/${r.id}?mode=view`)
                     }
-                    className="px-3 py-1 rounded-lg bg-blue-600/90 hover:bg-blue-600 text-white flex items-center gap-1"
+                    className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1"
                   >
                     <Eye size={14} /> View
                   </button>
 
-                  <button
-                    onClick={() =>
-                      router.push(`/dashboard/assets/${r.id}?mode=edit`)
-                    }
-                    className="px-3 py-1 rounded-lg bg-green-600/90 hover:bg-green-600 text-white flex items-center gap-1"
-                  >
-                    <Edit size={14} /> Edit
-                  </button>
+                  {r.status !== "GARBAGE" && (
+                    <button
+                      onClick={() =>
+                        router.push(`/dashboard/assets/${r.id}?mode=edit`)
+                      }
+                      className="px-3 py-1 rounded-lg bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
+                    >
+                      <Edit size={14} /> Edit
+                    </button>
+                  )}
+
+                  {r.status === "IN_STOCK" && (
+                    <>
+                      <button
+                        onClick={() =>
+                          router.push(
+                            `/dashboard/issues/new?asset=${r.asset_code}`
+                          )
+                        }
+                        className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1"
+                      >
+                        <UserPlus size={14} /> Issue
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          router.push(
+                            `/dashboard/garbage?asset=${r.asset_code}`
+                          )
+                        }
+                        className="px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center gap-1"
+                      >
+                        <Trash2 size={14} /> Garbage
+                      </button>
+                    </>
+                  )}
+
+                  {r.status === "ISSUED" && (
+                    <>
+                      <button
+                        onClick={() =>
+                          router.push(
+                            `/dashboard/transfer/new?asset=${r.asset_code}`
+                          )
+                        }
+                        className="px-3 py-1 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white flex items-center gap-1"
+                      >
+                        <ArrowRightLeft size={14} /> Transfer
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          router.push(
+                            `/dashboard/assets/return?asset=${r.asset_code}`
+                          )
+                        }
+                        className="px-3 py-1 rounded-lg bg-gray-600 hover:bg-gray-700 text-white flex items-center gap-1"
+                      >
+                        <RotateCcw size={14} /> Return
+                      </button>
+                    </>
+                  )}
                 </td>
               </motion.tr>
             ))}
