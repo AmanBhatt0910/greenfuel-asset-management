@@ -1,4 +1,7 @@
+// src/app/dashboard/page.jsx
+
 "use client";
+
 import {
   Package,
   UserPlus,
@@ -7,39 +10,61 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Dashboard() {
   const router = useRouter();
+  const [stats, setStats] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (!token) router.push("/");
+    if (!token) {
+      router.push("/");
+      return;
+    }
+
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("/api/dashboard/stats", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setStats(data);
+      } catch (err) {
+        console.error("Failed to fetch dashboard stats", err);
+      }
+    };
+
+    fetchStats();
   }, [router]);
 
-  const stats = [
+  if (!stats) {
+    return <p className="text-gray-400">Loading dashboard…</p>;
+  }
+
+  const cards = [
     {
       title: "Total Assets",
-      count: 120,
+      count: stats.totalAssets,
       icon: Package,
       gradient: "from-green-500 to-emerald-500",
     },
     {
       title: "Issued Assets",
-      count: 65,
+      count: stats.issuedAssets,
       icon: UserPlus,
       gradient: "from-blue-500 to-cyan-500",
     },
     {
       title: "In Stock",
-      count: 45,
+      count: stats.inStockAssets,
       icon: Archive,
       gradient: "from-yellow-500 to-orange-500",
     },
     {
       title: "Garbage Assets",
-      count: 10,
+      count: stats.garbageAssets,
       icon: Trash2,
       gradient: "from-red-500 to-pink-500",
     },
@@ -71,7 +96,7 @@ export default function Dashboard() {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-        {stats.map((s, i) => {
+        {cards.map((s, i) => {
           const Icon = s.icon;
           return (
             <motion.div
@@ -80,7 +105,6 @@ export default function Dashboard() {
               transition={{ type: "spring", stiffness: 200 }}
               className="relative overflow-hidden rounded-2xl border border-gray-700/60 bg-gray-900/70 backdrop-blur-xl shadow-lg group"
             >
-              {/* Glow */}
               <div
                 className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br ${s.gradient} blur-2xl`}
               />
@@ -102,38 +126,6 @@ export default function Dashboard() {
             </motion.div>
           );
         })}
-      </div>
-
-      {/* Insights / Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {[
-          {
-            title: "Assets by Type",
-            desc: "Distribution of assets across categories",
-          },
-          {
-            title: "Assets Status",
-            desc: "Issued vs available vs discarded",
-          },
-        ].map((card, i) => (
-          <motion.div
-            key={i}
-            whileHover={{ scale: 1.01 }}
-            transition={{ duration: 0.2 }}
-            className="relative rounded-2xl border border-gray-700/60 bg-gray-900/70 backdrop-blur-xl p-6 shadow-lg"
-          >
-            <h3 className="text-lg font-semibold text-white mb-1">
-              {card.title}
-            </h3>
-            <p className="text-sm text-gray-400 mb-6">{card.desc}</p>
-
-            {/* Empty state instead of ugly placeholder */}
-            <div className="h-56 flex flex-col items-center justify-center text-gray-500 border border-dashed border-gray-700 rounded-xl">
-              <TrendingUp size={32} className="mb-2 opacity-60" />
-              <p className="text-sm">Analytics coming soon</p>
-            </div>
-          </motion.div>
-        ))}
       </div>
     </motion.div>
   );
