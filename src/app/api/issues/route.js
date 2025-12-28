@@ -19,28 +19,31 @@ export async function GET(req) {
   try {
     const [rows] = await pool.query(`
       SELECT
-        id,
-        employee_name,
-        emp_code,
-        department,
-        division,
-        designation,
-        location,
-        phone,
-        hod,
-        email,
-        asset_type,
-        asset_code,
-        make_model,
-        serial_no,
-        ip_address,
-        os_software,
-        terms,
-        hostname,
-        remarks,
-        created_at
-      FROM issues
-      ORDER BY created_at DESC
+        i.id,
+        i.employee_name,
+        i.emp_code,
+        i.department,
+        i.division,
+        i.designation,
+        i.location,
+        i.phone,
+        i.hod,
+        i.email,
+        i.asset_type,
+        i.asset_code,
+        i.make_model,
+        i.serial_no,
+        i.ip_address,
+        i.os_software,
+        i.terms,
+        i.hostname,
+        i.remarks,
+        i.created_at
+      FROM issues i
+      INNER JOIN assets a
+        ON a.asset_code = i.asset_code
+      WHERE a.status = 'ISSUED'
+      ORDER BY i.created_at DESC
     `);
 
     return new Response(JSON.stringify(rows), { status: 200 });
