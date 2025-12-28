@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import React from "react";
@@ -60,6 +60,28 @@ export default function NewAssetPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState({ type: "", text: "" });
 
+  /* ---------- Required fields ---------- */
+  const requiredFields = [
+    "asset_code",
+    "make",
+    "model",
+    "serial_no",
+    "invoice_no",
+    "invoice_date",
+    "amount",
+    "vendor",
+    "warranty_years",
+    "warranty_start",
+    "warranty_end",
+  ];
+
+  /* ---------- Validation ---------- */
+  const isFormValid = useMemo(() => {
+    return requiredFields.every(
+      (key) => String(form[key]).trim() !== ""
+    );
+  }, [form]);
+
   const onChange = useCallback((e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
@@ -68,13 +90,25 @@ export default function NewAssetPage() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setMsg({ type: "", text: "" });
+
+    if (!isFormValid) {
+      setMsg({
+        type: "error",
+        text: "Please fill all required fields before submitting.",
+      });
+      return;
+    }
+
     setSaving(true);
 
     try {
       const token = localStorage.getItem("token");
       if (!token) {
         setSaving(false);
-        setMsg({ type: "error", text: "Not authenticated. Please log in again." });
+        setMsg({
+          type: "error",
+          text: "Not authenticated. Please log in again.",
+        });
         return;
       }
 
@@ -86,10 +120,8 @@ export default function NewAssetPage() {
         },
         body: JSON.stringify({
           ...form,
-          amount: form.amount ? Number(form.amount) : null,
-          warranty_years: form.warranty_years
-            ? Number(form.warranty_years)
-            : null,
+          amount: Number(form.amount),
+          warranty_years: Number(form.warranty_years),
         }),
       });
 
@@ -97,7 +129,10 @@ export default function NewAssetPage() {
 
       if (!res.ok) {
         setSaving(false);
-        setMsg({ type: "error", text: data.message || "Failed to save asset" });
+        setMsg({
+          type: "error",
+          text: data.message || "Failed to save asset",
+        });
         return;
       }
 
@@ -138,117 +173,41 @@ export default function NewAssetPage() {
       {/* Form */}
       <form onSubmit={onSubmit} className="space-y-6">
         {/* Basic Info */}
-        <section className="bg-gray-900/70 backdrop-blur-xl border border-gray-700 rounded-2xl p-6 shadow-xl">
+        <section className="bg-gray-900/70 border border-gray-700 rounded-2xl p-6">
           <h3 className="text-lg font-semibold text-white mb-4">
             Basic Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Field
-              label="Asset Code"
-              name="asset_code"
-              required
-              placeholder="GF-IT-001"
-              value={form.asset_code}
-              onChange={onChange}
-            />
-            <Field
-              label="Make"
-              name="make"
-              placeholder="Dell / HP / Lenovo"
-              value={form.make}
-              onChange={onChange}
-            />
-            <Field
-              label="Model"
-              name="model"
-              placeholder="Latitude 3420"
-              value={form.model}
-              onChange={onChange}
-            />
-            <Field
-              label="Serial No"
-              name="serial_no"
-              required
-              placeholder="SN-XXXX-1234"
-              value={form.serial_no}
-              onChange={onChange}
-            />
+            <Field label="Asset Code" name="asset_code" required value={form.asset_code} onChange={onChange} />
+            <Field label="Make" name="make" required value={form.make} onChange={onChange} />
+            <Field label="Model" name="model" required value={form.model} onChange={onChange} />
+            <Field label="Serial No" name="serial_no" required value={form.serial_no} onChange={onChange} />
           </div>
         </section>
 
         {/* Purchase Info */}
-        <section className="bg-gray-900/70 backdrop-blur-xl border border-gray-700 rounded-2xl p-6 shadow-xl">
+        <section className="bg-gray-900/70 border border-gray-700 rounded-2xl p-6">
           <h3 className="text-lg font-semibold text-white mb-4">
             Purchase Details
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Field
-              label="PO No"
-              name="po_no"
-              placeholder="PO-2024-0189"
-              value={form.po_no}
-              onChange={onChange}
-            />
-            <Field
-              label="Invoice No"
-              name="invoice_no"
-              placeholder="INV-998712"
-              value={form.invoice_no}
-              onChange={onChange}
-            />
-            <Field
-              label="Invoice Date"
-              name="invoice_date"
-              type="date"
-              value={form.invoice_date}
-              onChange={onChange}
-            />
-            <Field
-              label="Amount"
-              name="amount"
-              type="number"
-              placeholder="55000"
-              value={form.amount}
-              onChange={onChange}
-            />
-            <Field
-              label="Vendor"
-              name="vendor"
-              placeholder="Greenfuel Technologies Pvt Ltd"
-              value={form.vendor}
-              onChange={onChange}
-            />
+            <Field label="PO No" name="po_no" value={form.po_no} onChange={onChange} />
+            <Field label="Invoice No" name="invoice_no" required value={form.invoice_no} onChange={onChange} />
+            <Field label="Invoice Date" name="invoice_date" type="date" required value={form.invoice_date} onChange={onChange} />
+            <Field label="Amount" name="amount" type="number" required value={form.amount} onChange={onChange} />
+            <Field label="Vendor" name="vendor" required value={form.vendor} onChange={onChange} />
           </div>
         </section>
 
         {/* Warranty */}
-        <section className="bg-gray-900/70 backdrop-blur-xl border border-gray-700 rounded-2xl p-6 shadow-xl">
+        <section className="bg-gray-900/70 border border-gray-700 rounded-2xl p-6">
           <h3 className="text-lg font-semibold text-white mb-4">
             Warranty Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Field
-              label="Warranty (Years)"
-              name="warranty_years"
-              type="number"
-              placeholder="3"
-              value={form.warranty_years}
-              onChange={onChange}
-            />
-            <Field
-              label="Warranty Start Date"
-              name="warranty_start"
-              type="date"
-              value={form.warranty_start}
-              onChange={onChange}
-            />
-            <Field
-              label="Warranty End Date"
-              name="warranty_end"
-              type="date"
-              value={form.warranty_end}
-              onChange={onChange}
-            />
+            <Field label="Warranty (Years)" name="warranty_years" type="number" required value={form.warranty_years} onChange={onChange} />
+            <Field label="Warranty Start Date" name="warranty_start" type="date" required value={form.warranty_start} onChange={onChange} />
+            <Field label="Warranty End Date" name="warranty_end" type="date" required value={form.warranty_end} onChange={onChange} />
           </div>
         </section>
 
@@ -271,7 +230,7 @@ export default function NewAssetPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
-            disabled={saving}
+            disabled={saving || !isFormValid}
             className="px-6 py-3 rounded-xl bg-green-600 hover:bg-green-700
                        font-semibold flex items-center gap-2 shadow-lg
                        disabled:opacity-50"
