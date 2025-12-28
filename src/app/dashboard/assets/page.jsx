@@ -12,6 +12,8 @@ import {
   Trash2,
   RotateCcw,
   Search,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -43,6 +45,8 @@ export default function AssetsPage() {
   const [state, setState] = useState({ loading: true, error: "" });
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     const run = async () => {
@@ -88,6 +92,21 @@ export default function AssetsPage() {
 
     return result;
   }, [rows, statusFilter, searchTerm]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, searchTerm]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedRows = filteredRows.slice(startIndex, endIndex);
+
+  const goToPage = (page) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
 
   if (state.loading) return <p className="text-secondary">Loading assets…</p>;
   if (state.error) return <p className="text-danger">{state.error}</p>;
@@ -180,7 +199,7 @@ export default function AssetsPage() {
           </thead>
 
           <tbody>
-            {filteredRows.length === 0 ? (
+            {paginatedRows.length === 0 ? (
               <tr>
                 <td
                   colSpan={7}
@@ -190,7 +209,7 @@ export default function AssetsPage() {
                 </td>
               </tr>
             ) : (
-              filteredRows.map((r) => (
+              paginatedRows.map((r) => (
                 <motion.tr
                   key={r.id}
                   whileHover={{ backgroundColor: "var(--surface-muted)" }}
@@ -314,6 +333,99 @@ export default function AssetsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {filteredRows.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
+          {/* Items per page */}
+          <div className="flex items-center gap-2 text-sm text-secondary">
+            <span>Show</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="px-3 py-1.5 rounded-lg surface border-default text-primary focus:outline-none focus:ring-2 focus:ring-accent-soft"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            <span>
+              per page • Showing {startIndex + 1}-{Math.min(endIndex, filteredRows.length)} of {filteredRows.length}
+            </span>
+          </div>
+
+          {/* Page navigation */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`
+                p-2 rounded-lg border-default transition-colors
+                ${
+                  currentPage === 1
+                    ? "surface-muted text-secondary cursor-not-allowed opacity-50"
+                    : "surface text-primary hover:surface-muted"
+                }
+              `}
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                let pageNum;
+                if (totalPages <= 7) {
+                  pageNum = i + 1;
+                } else if (currentPage <= 4) {
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 3) {
+                  pageNum = totalPages - 6 + i;
+                } else {
+                  pageNum = currentPage - 3 + i;
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => goToPage(pageNum)}
+                    className={`
+                      px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
+                      ${
+                        currentPage === pageNum
+                          ? "accent-bg accent border-default"
+                          : "surface text-primary hover:surface-muted border-default"
+                      }
+                    `}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`
+                p-2 rounded-lg border-default transition-colors
+                ${
+                  currentPage === totalPages
+                    ? "surface-muted text-secondary cursor-not-allowed opacity-50"
+                    : "surface text-primary hover:surface-muted"
+                }
+              `}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }
