@@ -1,5 +1,3 @@
-//src/app/api/assets/[id]/history/route.js
-
 import pool from "@/lib/db";
 import { verifyAuth } from "@/lib/auth";
 
@@ -10,7 +8,7 @@ export async function GET(req, { params }) {
   }
 
   try {
-    // 1️⃣ Get asset
+    /* 1️⃣ Get asset */
     const [[asset]] = await pool.query(
       `SELECT id, asset_code, make, model, serial_no, status
        FROM assets
@@ -19,53 +17,93 @@ export async function GET(req, { params }) {
     );
 
     if (!asset) {
-      return new Response(JSON.stringify({ message: "Asset not found" }), { status: 404 });
+      return new Response(
+        JSON.stringify({ message: "Asset not found" }),
+        { status: 404 }
+      );
     }
 
-    // 2️⃣ Issues (who used it)
+    const timeline = [];
+
+    /* 2️⃣ ISSUES — source of truth for issuance */
     const [issues] = await pool.query(
       `SELECT
         employee_name,
         emp_code,
         department,
         location,
-        created_at AS event_date,
-        'ISSUED' AS event_type
+        created_at
        FROM issues
        WHERE asset_code = ?`,
       [asset.asset_code]
     );
 
-    // 3️⃣ Transfers
+    issues.forEach((i) => {
+      timeline.push({
+        event_type: "ISSUED",
+        employee_name: i.employee_name,
+        emp_code: i.emp_code,
+        department: i.department,
+        location: i.location,
+        event_date: i.created_at,
+        performed_by: "IT Admin",
+        display_message: `Issued to ${i.employee_name} (${i.emp_code})`,
+        source: "ISSUE",
+      });
+    });
+
+    /* 3️⃣ TRANSFERS */
     const [transfers] = await pool.query(
       `SELECT
         from_emp_code,
         to_emp_code,
-        transfer_date AS event_date,
-        'TRANSFER' AS event_type
+        transfer_date,
+        created_at
        FROM transfers
        WHERE asset_code = ?`,
       [asset.asset_code]
     );
 
-    // 4️⃣ System history
+    transfers.forEach((t) => {
+      timeline.push({
+        event_type: "TRANSFER",
+        from_emp_code: t.from_emp_code,
+        to_emp_code: t.to_emp_code,
+        event_date: t.transfer_date || t.created_at,
+        performed_by: "IT Admin",
+        display_message: `Transferred from ${t.from_emp_code} to ${t.to_emp_code}`,
+        source: "TRANSFER",
+      });
+    });
+
+    /* 4️⃣ SYSTEM HISTORY (exclude duplicate ISSUE logs) */
     const [systemHistory] = await pool.query(
       `SELECT
         event_type,
         description,
         performed_by,
-        created_at AS event_date
+        created_at
        FROM asset_history
-       WHERE asset_code = ?`,
+       WHERE asset_code = ?
+       AND event_type NOT IN ('ASSET_ISSUED')`,
       [asset.asset_code]
     );
 
-    // 5️⃣ Merge & sort timeline
-    const timeline = [
-      ...issues.map(i => ({ ...i, source: "ISSUE" })),
-      ...transfers.map(t => ({ ...t, source: "TRANSFER" })),
-      ...systemHistory.map(h => ({ ...h, source: "SYSTEM" })),
-    ].sort((a, b) => new Date(b.event_date) - new Date(a.event_date));
+    systemHistory.forEach((h) => {
+      timeline.push({
+        event_type: h.event_type,
+        description: h.description,
+        performed_by: h.performed_by || "System",
+        event_date: h.created_at,
+        display_message: h.description,
+        source: "SYSTEM",
+      });
+    });
+
+    /* 5️⃣ Sort timeline (newest first) */
+    timeline.sort(
+      (a, b) => new Date(b.event_date) - new Date(a.event_date)
+    );
 
     return new Response(
       JSON.stringify({
