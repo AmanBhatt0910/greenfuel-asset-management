@@ -42,7 +42,7 @@ export default function Dashboard() {
           fetch("/api/dashboard/stats", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          // ⬇️ Fetch more once, paginate on frontend
+
           fetch("/api/history?limit=50", {
             headers: { Authorization: `Bearer ${token}` },
           }),

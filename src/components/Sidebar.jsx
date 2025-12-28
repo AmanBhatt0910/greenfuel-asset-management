@@ -1,3 +1,5 @@
+// src/components/Sidebar.jsx
+
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation"; // ✅ usePathname for active state
