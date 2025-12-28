@@ -263,6 +263,128 @@ export default function NewAssetIssueForm() {
           </label>
         </section>
 
+        {/* OS & Software Details */}
+          <section className="bg-gray-900/70 border border-gray-700 rounded-2xl p-6">
+            <h3 className="text-lg font-semibold text-green-400 mb-4">
+              Operating Systems & Software Details
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormInput
+                label="Operating System Name"
+                placeholder="Windows"
+                value={formData.os_name || ""}
+                onChange={(e) => handleChange("os_name", e.target.value)}
+              />
+
+              <FormInput
+                label="OS Version"
+                placeholder="11 Pro"
+                value={formData.os_version || ""}
+                onChange={(e) => handleChange("os_version", e.target.value)}
+              />
+
+              <FormInput
+                label="Microsoft Office Version"
+                placeholder="Office 2021"
+                value={formData.office_version || ""}
+                onChange={(e) => handleChange("office_version", e.target.value)}
+              />
+
+              <FormInput
+                label="Antivirus"
+                placeholder="Sophos"
+                value={formData.antivirus || ""}
+                onChange={(e) => handleChange("antivirus", e.target.value)}
+              />
+
+              <FormSelect
+                label="Windows Update"
+                options={["YES", "NO"]}
+                value={formData.windows_update || "YES"}
+                onChange={(e) => handleChange("windows_update", e.target.value)}
+              />
+
+              <FormSelect
+                label="Local Admin Removed"
+                options={["YES", "NO"]}
+                value={formData.local_admin_removed || "YES"}
+                onChange={(e) => handleChange("local_admin_removed", e.target.value)}
+              />
+
+              <FormSelect
+                label="Printer Configured"
+                options={["YES", "NO"]}
+                value={formData.printer_configured || "YES"}
+                onChange={(e) => handleChange("printer_configured", e.target.value)}
+              />
+
+              <FormSelect
+                label="SAP Installed"
+                options={["YES", "NO"]}
+                value={formData.sap || "NO"}
+                onChange={(e) => handleChange("sap", e.target.value)}
+              />
+
+              <FormSelect
+                label="Backup Configured"
+                options={["YES", "NO"]}
+                value={formData.backup_configured || "NO"}
+                onChange={(e) => handleChange("backup_configured", e.target.value)}
+              />
+
+              <FormSelect
+                label="7-Zip Installed"
+                options={["YES", "NO"]}
+                value={formData.zip_7 || "YES"}
+                onChange={(e) => handleChange("zip_7", e.target.value)}
+              />
+
+              <FormSelect
+                label="Chrome Installed"
+                options={["YES", "NO"]}
+                value={formData.chrome || "YES"}
+                onChange={(e) => handleChange("chrome", e.target.value)}
+              />
+
+              <FormSelect
+                label="OneDrive Configured"
+                options={["YES", "NO"]}
+                value={formData.onedrive || "YES"}
+                onChange={(e) => handleChange("onedrive", e.target.value)}
+              />
+
+              <FormSelect
+                label="Laptop Bag Provided"
+                options={["YES", "NO"]}
+                value={formData.laptop_bag || "YES"}
+                onChange={(e) => handleChange("laptop_bag", e.target.value)}
+              />
+
+              <FormInput
+                label="RMM Agent"
+                placeholder="Kaseya / Intune"
+                value={formData.rmm_agent || ""}
+                onChange={(e) => handleChange("rmm_agent", e.target.value)}
+              />
+
+              <FormInput
+                label="Physical Condition"
+                placeholder="Good"
+                value={formData.physical_condition || ""}
+                onChange={(e) => handleChange("physical_condition", e.target.value)}
+              />
+
+              <FormInput
+                label="Hostname"
+                placeholder="GF-LAP-023"
+                value={formData.hostname || ""}
+                onChange={(e) => handleChange("hostname", e.target.value)}
+              />
+            </div>
+          </section>
+
+
         {/* CTA */}
         <div className="flex justify-end">
           <button

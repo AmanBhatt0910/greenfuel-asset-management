@@ -5,15 +5,12 @@ import { verifyAuth } from "@/lib/auth";
 import { logHistory } from "@/lib/history";
 
 /* ============================
-   GET — Fetch all issues
+   GET — Fetch all issued assets
 ============================ */
 export async function GET(req) {
   const auth = verifyAuth(req);
   if (!auth.ok) {
-    return new Response(
-      JSON.stringify({ message: auth.error }),
-      { status: 401 }
-    );
+    return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
   }
 
   try {
@@ -29,14 +26,32 @@ export async function GET(req) {
         i.phone,
         i.hod,
         i.email,
+
         i.asset_type,
         i.asset_code,
         i.make_model,
         i.serial_no,
         i.ip_address,
+
         i.os_software,
-        i.terms,
+        i.os_name,
+        i.os_version,
+        i.office_version,
+        i.antivirus,
+        i.windows_update,
+        i.local_admin_removed,
+        i.printer_configured,
+        i.sap,
+        i.backup_configured,
+        i.zip_7,
+        i.chrome,
+        i.onedrive,
+        i.laptop_bag,
+        i.rmm_agent,
         i.hostname,
+        i.physical_condition,
+
+        i.terms,
         i.remarks,
         i.created_at
       FROM issues i
@@ -81,28 +96,40 @@ export async function POST(req) {
       return new Response(JSON.stringify({ message: "Asset not found" }), { status: 404 });
     }
 
-    if (asset.status === "ISSUED") {
+    if (asset.status !== "IN_STOCK") {
       await conn.rollback();
       return new Response(
-        JSON.stringify({ message: "Asset is already issued" }),
+        JSON.stringify({ message: "Asset cannot be issued in current state" }),
         { status: 409 }
       );
     }
 
-      if (asset.status !== "IN_STOCK") {
-        await conn.rollback();
-        return new Response(
-          JSON.stringify({ message: "Asset cannot be issued in current state" }),
-          { status: 409 }
-        );
-      }
-
     await conn.query(
-      `INSERT INTO issues
-       (employee_name, emp_code, department, division, designation, location,
-        phone, hod, email, asset_type, asset_code, make_model, serial_no,
-        ip_address, os_software, terms, hostname, remarks)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `
+      INSERT INTO issues (
+        employee_name, emp_code, department, division, designation,
+        location, phone, hod, email,
+
+        asset_type, asset_code, make_model, serial_no, ip_address,
+
+        os_software, os_name, os_version, office_version,
+        antivirus, windows_update, local_admin_removed,
+        printer_configured, sap, backup_configured,
+        zip_7, chrome, onedrive, laptop_bag,
+        rmm_agent, hostname, physical_condition,
+
+        terms, remarks
+      ) VALUES (
+        ?, ?, ?, ?, ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?,
+        ?, ?, ?, ?,
+        ?, ?, ?,
+        ?, ?, ?,
+        ?, ?, ?, ?,
+        ?, ?, ?,
+        ?, ?
+      )
+      `,
       [
         data.employee_name,
         data.emp_code,
@@ -113,14 +140,32 @@ export async function POST(req) {
         data.phone,
         data.hod,
         data.email,
+
         data.asset_type,
         data.asset_code,
         data.make_model,
         data.serial_no,
         data.ip_address,
+
         data.os_software,
-        data.terms,
+        data.os_name,
+        data.os_version,
+        data.office_version,
+        data.antivirus,
+        data.windows_update,
+        data.local_admin_removed,
+        data.printer_configured,
+        data.sap,
+        data.backup_configured,
+        data.zip_7,
+        data.chrome,
+        data.onedrive,
+        data.laptop_bag,
+        data.rmm_agent,
         data.hostname,
+        data.physical_condition,
+
+        data.terms,
         data.remarks,
       ]
     );
@@ -145,7 +190,7 @@ export async function POST(req) {
     );
   } catch (err) {
     await conn.rollback();
-    console.error(err);
+    console.error("POST /api/issues error:", err);
     return new Response(
       JSON.stringify({ message: "Failed to create issue" }),
       { status: 500 }

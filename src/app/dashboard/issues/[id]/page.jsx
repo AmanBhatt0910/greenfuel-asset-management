@@ -1,3 +1,5 @@
+// src/app/dashboard/issues/[id]/page.jsx
+
 "use client";
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -61,6 +63,12 @@ export default function IssueDetailPage() {
           hostname: issue.hostname,
           remarks: issue.remarks,
           terms: issue.terms,
+          os_name: issue.os_name,
+          os_version: issue.os_version,
+          office_version: issue.office_version,
+          antivirus: issue.antivirus,
+          rmm_agent: issue.rmm_agent,
+          physical_condition: issue.physical_condition,
         }),
       });
 
@@ -148,6 +156,27 @@ export default function IssueDetailPage() {
           <FormInput label="Remarks" value={issue.remarks} readOnly={!isEdit} onChange={(e)=>onChange("remarks", e.target.value)} />
         </Grid>
       </Section>
+
+      <Section title="OS & Software Configuration">
+        <Grid>
+          <FormInput label="OS Name" value={issue.os_name} readOnly={!isEdit} onChange={(e)=>onChange("os_name", e.target.value)} />
+          <FormInput label="OS Version" value={issue.os_version} readOnly={!isEdit} onChange={(e)=>onChange("os_version", e.target.value)} />
+          <FormInput label="Office Version" value={issue.office_version} readOnly={!isEdit} onChange={(e)=>onChange("office_version", e.target.value)} />
+          <FormInput label="Antivirus" value={issue.antivirus} readOnly={!isEdit} onChange={(e)=>onChange("antivirus", e.target.value)} />
+          <FormInput label="Windows Update" value={issue.windows_update} readOnly />
+          <FormInput label="Local Admin Removed" value={issue.local_admin_removed} readOnly />
+          <FormInput label="Printer Configured" value={issue.printer_configured} readOnly />
+          <FormInput label="SAP" value={issue.sap} readOnly />
+          <FormInput label="Backup Configured" value={issue.backup_configured} readOnly />
+          <FormInput label="7-Zip" value={issue.zip_7} readOnly />
+          <FormInput label="Chrome" value={issue.chrome} readOnly />
+          <FormInput label="OneDrive" value={issue.onedrive} readOnly />
+          <FormInput label="Laptop Bag" value={issue.laptop_bag} readOnly />
+          <FormInput label="RMM Agent" value={issue.rmm_agent} readOnly={!isEdit} onChange={(e)=>onChange("rmm_agent", e.target.value)} />
+          <FormInput label="Physical Condition" value={issue.physical_condition} readOnly={!isEdit} onChange={(e)=>onChange("physical_condition", e.target.value)} />
+        </Grid>
+      </Section>
+
 
       {/* Save Bar */}
       {isEdit && (
