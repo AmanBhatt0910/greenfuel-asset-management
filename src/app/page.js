@@ -1,8 +1,7 @@
 // src/app/page.js
-
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Leaf, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 
@@ -14,11 +13,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -51,8 +45,6 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-
-  if (!mounted) return null;
 
   return (
     <div
@@ -123,7 +115,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@greenfuel.com"
-                  className="w-full px-4 py-4 rounded-xl surface-muted border border-[color:var(--border)]/50 text-primary focus:ring-2 focus:ring-[color:var(--accent)]/50"
+                  className="w-full px-4 py-4 rounded-xl surface-muted border border-[color:var(--border)]/50 text-primary focus:ring-2 focus:ring-[color:var(--accent)]/50 focus:outline-none transition-all"
                   required
                 />
               </div>
@@ -138,13 +130,13 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="********"
-                    className="w-full px-4 py-4 pr-12 rounded-xl surface-muted border border-[color:var(--border)]/50 text-primary focus:ring-2 focus:ring-[color:var(--accent)]/50"
+                    className="w-full px-4 py-4 pr-12 rounded-xl surface-muted border border-[color:var(--border)]/50 text-primary focus:ring-2 focus:ring-[color:var(--accent)]/50 focus:outline-none transition-all"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:accent"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:accent transition-colors"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -157,22 +149,22 @@ export default function LoginPage() {
                 className={`
                   group w-full py-4 rounded-xl font-semibold
                   transition-all disabled:opacity-50
-                  bg-gradient-to-r
-                  from-[color:var(--accent-strong)]
-                  to-[color:var(--accent)]
-                  text-primary
+                  gradient-accent
+                  text-white
+                  hover:opacity-90
+                  shadow-lg hover:shadow-xl
                 `}
               >
                 <span className="flex items-center justify-center space-x-2">
                   {loading ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-[color:var(--foreground)]/30 border-t-[color:var(--foreground)] rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       <span>Logging in...</span>
                     </>
                   ) : (
                     <>
                       <span>Login</span>
-                      <ArrowRight size={18} />
+                      <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                     </>
                   )}
                 </span>
