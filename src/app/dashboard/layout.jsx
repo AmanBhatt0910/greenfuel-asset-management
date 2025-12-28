@@ -1,18 +1,19 @@
 // src/app/dashboard/layout.jsx
 
 "use client";
+
 import { motion } from "framer-motion";
 import Sidebar from "@/components/Sidebar";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function DashboardLayout({ children }) {
   return (
-    <div className="flex min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+    <div className="flex min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
       <Sidebar />
 
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className="h-16 flex items-center justify-end px-6 border-b border-gray-200 dark:border-gray-800">
+        <header className="h-16 flex items-center justify-end px-6 surface border-b border-default">
           <ThemeToggle />
         </header>
 

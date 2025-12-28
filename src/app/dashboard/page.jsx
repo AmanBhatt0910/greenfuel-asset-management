@@ -42,7 +42,6 @@ export default function Dashboard() {
           fetch("/api/dashboard/stats", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-
           fetch("/api/history?limit=50", {
             headers: { Authorization: `Bearer ${token}` },
           }),
@@ -97,9 +96,9 @@ export default function Dashboard() {
   ];
 
   const pieData = [
-    { name: "Issued", value: stats.issuedAssets, color: "#38bdf8" },
-    { name: "In Stock", value: stats.inStockAssets, color: "#facc15" },
-    { name: "Garbage", value: stats.garbageAssets, color: "#f43f5e" },
+    { name: "Issued", value: stats.issuedAssets, color: "var(--info)" },
+    { name: "In Stock", value: stats.inStockAssets, color: "var(--warning)" },
+    { name: "Garbage", value: stats.garbageAssets, color: "var(--danger)" },
   ];
 
   return (
@@ -112,7 +111,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-4xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+          <h2 className="text-4xl font-bold gradient-accent bg-clip-text text-transparent">
             Dashboard
           </h2>
           <p className="text-secondary mt-1">
@@ -120,7 +119,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl accent-bg border border-[color:var(--accent)]/20 accent text-sm">
           <TrendingUp size={16} />
           System Healthy
         </div>
@@ -134,11 +133,12 @@ export default function Dashboard() {
             <motion.div
               key={i}
               whileHover={{ y: -6 }}
-              className="relative overflow-hidden rounded-2xl border border-[color:var(--border)]/60 surface backdrop-blur-xl shadow-lg"
+              className="relative overflow-hidden rounded-2xl surface border border-[color:var(--border)]/60 backdrop-blur-xl shadow-lg"
             >
               <div className="relative p-6 flex items-center gap-4">
+                {/* ICON COLORS KEPT STATIC */}
                 <div
-                  className={`p-4 rounded-xl bg-gradient-to-br ${s.gradient} text-primary shadow-lg`}
+                  className={`p-4 rounded-xl bg-gradient-to-br ${s.gradient} text-white shadow-lg`}
                 >
                   <Icon size={24} />
                 </div>
@@ -158,7 +158,7 @@ export default function Dashboard() {
       {/* Charts + Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pie Chart */}
-        <div className="rounded-2xl border border-[color:var(--border)] surface p-6 shadow-lg">
+        <div className="rounded-2xl surface border border-[color:var(--border)] p-6 shadow-lg">
           <h3 className="text-lg font-semibold text-primary mb-4">
             Asset Status Distribution
           </h3>
@@ -184,8 +184,8 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Activity (Paginated) */}
-        <div className="rounded-2xl border border-[color:var(--border)] surface p-6 shadow-lg">
+        {/* Recent Activity */}
+        <div className="rounded-2xl surface border border-[color:var(--border)] p-6 shadow-lg">
           <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
             <History size={18} />
             Recent Activity
@@ -200,12 +200,12 @@ export default function Dashboard() {
               paginatedHistory.map((h) => (
                 <div
                   key={h.id}
-                  className="p-3 rounded-xl border border-[color:var(--border)] surface-muted"
+                  className="p-3 rounded-xl surface-muted border border-[color:var(--border)]"
                 >
-                  <p className="text-sm text-gray-200">
+                  <p className="text-sm text-primary">
                     {h.description}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-secondary mt-1">
                     {new Date(h.created_at).toLocaleString()}
                   </p>
                 </div>
@@ -219,7 +219,7 @@ export default function Dashboard() {
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="px-3 py-1 rounded-lg text-sm bg-gray-800 border border-[color:var(--border)] disabled:opacity-40"
+                className="px-3 py-1 rounded-lg text-sm surface-muted border border-[color:var(--border)] disabled:opacity-40"
               >
                 Previous
               </button>
@@ -231,7 +231,7 @@ export default function Dashboard() {
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="px-3 py-1 rounded-lg text-sm bg-gray-800 border border-[color:var(--border)] disabled:opacity-40"
+                className="px-3 py-1 rounded-lg text-sm surface-muted border border-[color:var(--border)] disabled:opacity-40"
               >
                 Next
               </button>
