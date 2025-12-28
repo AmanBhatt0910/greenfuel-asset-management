@@ -11,9 +11,13 @@ import {
   ArrowRightLeft,
   Trash2,
   RotateCcw,
+  Search,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+/* ============================
+   Status Badge
+============================ */
 const StatusBadge = ({ status }) => {
   const styles = {
     IN_STOCK: "bg-green-500/10 text-green-400 border-green-500/30",
@@ -40,6 +44,7 @@ export default function AssetsPage() {
   const [rows, setRows] = useState([]);
   const [state, setState] = useState({ loading: true, error: "" });
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [searchTerm, setSearchTerm] = useState("");
 
   /* Fetch assets */
   useEffect(() => {
@@ -69,11 +74,27 @@ export default function AssetsPage() {
     };
   }, [rows]);
 
-  /* Filtered rows */
+  /* Filtered rows (status + search) */
   const filteredRows = useMemo(() => {
-    if (statusFilter === "ALL") return rows;
-    return rows.filter((r) => r.status === statusFilter);
-  }, [rows, statusFilter]);
+    let result = rows;
+
+    // 1️⃣ Status filter
+    if (statusFilter !== "ALL") {
+      result = result.filter((r) => r.status === statusFilter);
+    }
+
+    // 2️⃣ Search filter (asset code OR serial no)
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      result = result.filter(
+        (r) =>
+          r.asset_code?.toLowerCase().includes(q) ||
+          r.serial_no?.toLowerCase().includes(q)
+      );
+    }
+
+    return result;
+  }, [rows, statusFilter, searchTerm]);
 
   if (state.loading) return <p className="text-gray-400">Loading assets…</p>;
   if (state.error) return <p className="text-red-400">{state.error}</p>;
@@ -93,30 +114,48 @@ export default function AssetsPage() {
         </p>
       </div>
 
-      {/* Status Filters */}
-      <div className="flex flex-wrap gap-2">
-        {[
-          { key: "ALL", label: "All" },
-          { key: "IN_STOCK", label: "In Stock" },
-          { key: "ISSUED", label: "Issued" },
-          { key: "GARBAGE", label: "Garbage" },
-        ].map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setStatusFilter(f.key)}
-            className={`px-4 py-1.5 rounded-full text-sm border transition-all
-              ${
-                statusFilter === f.key
-                  ? "bg-green-600 text-white border-green-600"
-                  : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700"
-              }`}
-          >
-            {f.label}
-            <span className="ml-2 text-xs opacity-80">
-              ({counts[f.key]})
-            </span>
-          </button>
-        ))}
+      {/* Filters Row */}
+      <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
+        {/* Status Filters */}
+        <div className="flex flex-wrap gap-2">
+          {[
+            { key: "ALL", label: "All" },
+            { key: "IN_STOCK", label: "In Stock" },
+            { key: "ISSUED", label: "Issued" },
+            { key: "GARBAGE", label: "Garbage" },
+          ].map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setStatusFilter(f.key)}
+              className={`px-4 py-1.5 rounded-full text-sm border transition-all
+                ${
+                  statusFilter === f.key
+                    ? "bg-green-600 text-white border-green-600"
+                    : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700"
+                }`}
+            >
+              {f.label}
+              <span className="ml-2 text-xs opacity-80">
+                ({counts[f.key]})
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="relative w-full lg:w-80">
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            type="text"
+            placeholder="Search by Asset Code or Serial No"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 rounded-xl bg-gray-900 border border-gray-700 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/40"
+          />
+        </div>
       </div>
 
       {/* Table */}
@@ -147,7 +186,7 @@ export default function AssetsPage() {
                   colSpan={7}
                   className="px-6 py-8 text-center text-gray-400"
                 >
-                  No assets found for selected filter
+                  No assets found
                 </td>
               </tr>
             ) : (
@@ -159,18 +198,14 @@ export default function AssetsPage() {
                   }}
                   className="border-t border-gray-800"
                 >
-                  <td className="px-6 py-4 font-medium">
-                    {r.asset_code}
-                  </td>
+                  <td className="px-6 py-4 font-medium">{r.asset_code}</td>
                   <td className="px-6 py-4">
                     {r.make} {r.model}
                   </td>
                   <td className="px-6 py-4">{r.serial_no}</td>
                   <td className="px-6 py-4">{r.vendor || "-"}</td>
                   <td className="px-6 py-4">
-                    {r.warranty_years
-                      ? `${r.warranty_years} yrs`
-                      : "-"}
+                    {r.warranty_years ? `${r.warranty_years} yrs` : "-"}
                   </td>
                   <td className="px-6 py-4">
                     <StatusBadge status={r.status} />
