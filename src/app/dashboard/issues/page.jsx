@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Eye, Edit, Search, ArrowRight } from "lucide-react";
+import { Eye, Edit, Search, ArrowRight, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
@@ -121,6 +121,22 @@ export default function AssetIssuesList() {
                   {/* Actions */}
                   <td className="px-6 py-4">
                     <div className="flex justify-end gap-2">
+                      {/* PDF */}
+                      <button
+                        onClick={() =>
+                          window.open(
+                            `/api/issues/${issue.id}/form`,
+                            "_blank"
+                          )
+                        }
+                        className="flex items-center gap-1.5 px-3 py-1.5
+                                   rounded-lg bg-indigo-600 hover:bg-indigo-700
+                                   text-white text-xs transition"
+                      >
+                        <FileText size={14} />
+                        Issue Form
+                      </button>
+
                       {/* View */}
                       <button
                         onClick={() =>
@@ -159,10 +175,9 @@ export default function AssetIssuesList() {
         )}
       </div>
 
-      {/* Footer hint */}
       {!loading && filtered.length > 0 && (
         <div className="text-xs text-gray-500 flex items-center gap-1">
-          Click <ArrowRight size={12} /> View or Edit to manage issue details
+          Click <ArrowRight size={12} /> View, Edit or Issue Form to manage assets
         </div>
       )}
     </motion.div>
