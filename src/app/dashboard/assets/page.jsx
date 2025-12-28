@@ -174,10 +174,7 @@ export default function AssetsPage() {
 
                       <button
                         onClick={() =>
-                          router.push(
-                  -         `/dashboard/assets/return?asset=${r.id}`
-                  +         `/dashboard/assets/return?issue=${r.issue_id}`
-                          )
+                          router.push(`/dashboard/assets/return?issue=${r.issue_id}`)
                         }
                         className="px-3 py-1 rounded-lg bg-gray-600 hover:bg-gray-700 text-white flex items-center gap-1"
                       >
