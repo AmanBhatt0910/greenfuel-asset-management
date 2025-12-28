@@ -1,13 +1,11 @@
 // app/dashboard/issue/new/page.jsx
-
-// app/dashboard/issue/new/page.jsx
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, FileCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import FormInput from "@/components/FormInput";
-import FormSelect from "@/components/FormSelect";
+import FormSelectSearchable from "@/components/FormSelectSearchable";
 
 export default function NewAssetIssueForm() {
   const router = useRouter();
@@ -89,6 +87,12 @@ export default function NewAssetIssueForm() {
     }
   };
 
+  // Create options with detailed labels for better searchability
+  const assetOptions = assets.map((a) => ({
+    value: a.asset_code,
+    label: `${a.asset_code} - ${a.make} ${a.model} (${a.serial_no})`,
+  }));
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -143,17 +147,21 @@ export default function NewAssetIssueForm() {
               value={formData.emp_code || ""}
               onChange={(e) => handleChange("emp_code", e.target.value)}
             />
-            <FormSelect
+            <FormSelectSearchable
               label="Department"
               value={formData.department || ""}
               options={["IT","HR","Finance","Operations","Sales","Admin"]}
               onChange={(e) => handleChange("department", e.target.value)}
+              placeholder="Select department..."
+              searchPlaceholder="Search departments..."
             />
-            <FormSelect
+            <FormSelectSearchable
               label="Division"
               value={formData.division || ""}
               options={["CNG","BATTERY","CORPORATE","GUJARAT"]}
               onChange={(e) => handleChange("division", e.target.value)}
+              placeholder="Select division..."
+              searchPlaceholder="Search divisions..."
             />
             <FormInput
               label="Designation"
@@ -185,12 +193,14 @@ export default function NewAssetIssueForm() {
             Asset Details
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormSelect
+            <FormSelectSearchable
               label="Asset Code"
-              options={assets.map((a) => a.asset_code)}
+              options={assetOptions}
               value={selectedAssetCode}
               disabled={assets.length === 0}
               onChange={(e) => handleAssetChange(e.target.value)}
+              placeholder="Search by asset code, make, model, or serial..."
+              searchPlaceholder="Type to search assets..."
             />
             <FormInput label="Make" value={selectedAsset?.make || ""} readOnly />
             <FormInput label="Model" value={selectedAsset?.model || ""} readOnly />
@@ -278,59 +288,68 @@ export default function NewAssetIssueForm() {
               value={formData.antivirus || ""}
               onChange={(e) => handleChange("antivirus", e.target.value)}
             />
-            <FormSelect
+            <FormSelectSearchable
               label="Windows Update"
               options={["YES", "NO"]}
               value={formData.windows_update || "YES"}
               onChange={(e) => handleChange("windows_update", e.target.value)}
+              placeholder="Select option..."
             />
-            <FormSelect
+            <FormSelectSearchable
               label="Local Admin Removed"
               options={["YES", "NO"]}
               value={formData.local_admin_removed || "YES"}
               onChange={(e) => handleChange("local_admin_removed", e.target.value)}
+              placeholder="Select option..."
             />
-            <FormSelect
+            <FormSelectSearchable
               label="Printer Configured"
               options={["YES", "NO"]}
               value={formData.printer_configured || "YES"}
               onChange={(e) => handleChange("printer_configured", e.target.value)}
+              placeholder="Select option..."
             />
-            <FormSelect
+            <FormSelectSearchable
               label="SAP Installed"
               options={["YES", "NO"]}
               value={formData.sap || "NO"}
               onChange={(e) => handleChange("sap", e.target.value)}
+              placeholder="Select option..."
             />
-            <FormSelect
+            <FormSelectSearchable
               label="Backup Configured"
               options={["YES", "NO"]}
               value={formData.backup_configured || "NO"}
               onChange={(e) => handleChange("backup_configured", e.target.value)}
+              placeholder="Select option..."
             />
-            <FormSelect
+            <FormSelectSearchable
               label="7-Zip Installed"
               options={["YES", "NO"]}
               value={formData.zip_7 || "YES"}
               onChange={(e) => handleChange("zip_7", e.target.value)}
+              placeholder="Select option..."
             />
-            <FormSelect
+            <FormSelectSearchable
               label="Chrome Installed"
               options={["YES", "NO"]}
               value={formData.chrome || "YES"}
               onChange={(e) => handleChange("chrome", e.target.value)}
+              placeholder="Select option..."
             />
-            <FormSelect
+            <FormSelectSearchable
               label="OneDrive Configured"
               options={["YES", "NO"]}
               value={formData.onedrive || "YES"}
               onChange={(e) => handleChange("onedrive", e.target.value)}
+              placeholder="Select option..."
             />
-            <FormSelect
+            <FormSelectSearchable
               label="Laptop Bag Provided"
               options={["YES", "NO"]}
               value={formData.laptop_bag || "YES"}
               onChange={(e) => handleChange("laptop_bag", e.target.value)}
+              placeholder="Select option..."
             />
             <FormInput
               label="RMM Agent"

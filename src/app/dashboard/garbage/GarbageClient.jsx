@@ -1,10 +1,11 @@
+// app/dashboard/garbage/GarbageClient.jsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import FormInput from "@/components/FormInput";
-import FormSelect from "@/components/FormSelect";
+import FormSelectSearchable from "@/components/FormSelectSearchable";
 
 export default function GarbageClient() {
   const router = useRouter();
@@ -59,6 +60,12 @@ export default function GarbageClient() {
     router.push("/dashboard/assets");
   };
 
+  // Create options with more detailed labels for better searchability
+  const assetOptions = assets.map((a) => ({
+    value: a.asset_code,
+    label: `${a.asset_code} - ${a.make} ${a.model} (${a.serial_no})`,
+  }));
+
   return (
     <div className="max-w-2xl space-y-6">
       {/* Header */}
@@ -72,13 +79,15 @@ export default function GarbageClient() {
         onSubmit={submit}
         className="surface border border-default rounded-2xl p-6 space-y-6"
       >
-        <FormSelect
+        <FormSelectSearchable
           label="Select Asset"
           value={form.asset_code}
-          options={assets.map((a) => a.asset_code)}
+          options={assetOptions}
           onChange={(e) =>
             setForm({ ...form, asset_code: e.target.value })
           }
+          placeholder="Search by asset code, make, model, or serial..."
+          searchPlaceholder="Type to search assets..."
         />
 
         <FormInput

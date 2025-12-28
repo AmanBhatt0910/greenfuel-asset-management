@@ -1,13 +1,10 @@
 // src/app/dashboard/transfer/new/page.jsx
-
-// src/app/dashboard/transfer/new/page.jsx
-
 "use client";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowRightLeft, Send, AlertCircle } from "lucide-react";
 import FormInput from "@/components/FormInput";
-import FormSelect from "@/components/FormSelect";
+import FormSelectSearchable from "@/components/FormSelectSearchable";
 
 export default function AssetTransferRequest() {
   const [issues, setIssues] = useState([]);
@@ -162,6 +159,20 @@ export default function AssetTransferRequest() {
     }
   };
 
+  // Create asset options with detailed labels for better searchability
+  const assetOptions = issuedAssets.map((i) => ({
+    value: i.asset_code,
+    label: `${i.asset_code} - ${i.make_model || "N/A"} (Issued to: ${i.employee_name})`,
+  }));
+
+  // Create user options with detailed labels for better searchability
+  const userOptions = users
+    .filter((u) => u.emp_code !== formData.from_emp_code)
+    .map((u) => ({
+      value: u.emp_code,
+      label: `${u.employee_name} - ${u.emp_code} (${u.department || "N/A"})`,
+    }));
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -187,14 +198,13 @@ export default function AssetTransferRequest() {
             Asset Details
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormSelect
+            <FormSelectSearchable
               label="Select Asset Code"
-              options={issuedAssets.map((i) => ({
-                label: `${i.asset_code} - ${i.make_model || ""} (${i.employee_name})`,
-                value: i.asset_code,
-              }))}
+              options={assetOptions}
               value={selectedAssetCode}
               onChange={(e) => handleAssetChange(e.target.value)}
+              placeholder="Search by asset code, model, or current holder..."
+              searchPlaceholder="Type to search assets..."
             />
             <FormInput label="Make/Model" value={formData.make_model} readOnly />
             <FormInput label="Serial Number" value={formData.serial_no} readOnly />
@@ -221,16 +231,13 @@ export default function AssetTransferRequest() {
             Transfer To
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormSelect
+            <FormSelectSearchable
               label="Select Employee"
-              options={users
-                .filter((u) => u.emp_code !== formData.from_emp_code)
-                .map((u) => ({
-                  label: u.employee_name,
-                  value: u.emp_code,
-                }))}
+              options={userOptions}
               value={formData.to_emp_code}
               onChange={(e) => handleUserChange(e.target.value)}
+              placeholder="Search by name, employee code, or department..."
+              searchPlaceholder="Type to search employees..."
             />
             <FormInput label="Employee Name" value={formData.to_emp_name} readOnly />
             <FormInput label="Emp Code" value={formData.to_emp_code} readOnly />
