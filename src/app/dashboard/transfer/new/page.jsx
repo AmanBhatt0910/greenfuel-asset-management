@@ -29,6 +29,12 @@ export default function AssetTransferRequest() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  // Only issued assets (issues table = issued assets)
+  const issuedAssets = issues.filter(
+    (i) => i.asset_code && i.emp_code
+  );
+
+
   // Fetch issues (assets with employee details) + users on mount
   useEffect(() => {
     const fetchData = async () => {
@@ -65,7 +71,7 @@ export default function AssetTransferRequest() {
   // When asset is selected, populate asset + "from employee" details from issue record
   const handleAssetChange = (assetCode) => {
     setSelectedAssetCode(assetCode);
-    const issue = issues.find((i) => i.asset_code === assetCode);
+    const issue = issuedAssets.find((i) => i.asset_code === assetCode);
     if (!issue) return;
 
     // Fill asset details
@@ -157,8 +163,8 @@ export default function AssetTransferRequest() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormSelect
               label="Select Asset Code"
-              options={issues.map((i) => ({
-                label: `${i.asset_code} - ${i.make_model || ""}`,
+              options={issuedAssets.map((i) => ({
+                label: `${i.asset_code} - ${i.make_model || ""} (${i.employee_name})`,
                 value: i.asset_code,
               }))}
               value={selectedAssetCode}
