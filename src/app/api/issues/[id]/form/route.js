@@ -1,5 +1,4 @@
 // src/app/api/issues/[id]/form/route.js
-
 // src/app/api/issues/[id]/form/route.js
 
 export const runtime = "nodejs";
@@ -22,10 +21,7 @@ export async function GET(req, ctx) {
   /* ================= FETCH DATA ================= */
   const [[issue]] = await pool.query(
     `
-    SELECT 
-      i.*,
-      a.make,
-      a.model
+    SELECT i.*, a.make, a.model
     FROM issues i
     LEFT JOIN assets a ON a.asset_code = i.asset_code
     WHERE i.id = ?
@@ -37,7 +33,7 @@ export async function GET(req, ctx) {
 
   /* ================= PDF INIT ================= */
   const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595, 842]); // A4
+  const page = pdfDoc.addPage([595, 842]);
   const { width, height } = page.getSize();
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -54,15 +50,16 @@ export async function GET(req, ctx) {
   const hLine = (x, y, w) =>
     page.drawLine({ start: { x, y }, end: { x: x + w, y }, thickness: 0.6, color: line });
 
-  const centerText = (text, y, size, f = font) => {
-    const w = f.widthOfTextAtSize(text, size);
-    page.drawText(text, { x: width / 2 - w / 2, y, size, font: f });
+  const centerText = (t, y, s, f = font) => {
+    const w = f.widthOfTextAtSize(t, s);
+    page.drawText(t, { x: width / 2 - w / 2, y, size: s, font: f });
   };
 
+  const centerY = (topY, rowH, fontSize) =>
+    topY - rowH / 2 - fontSize / 2;
+
   /* ================= HEADER ================= */
-  const logoBytes = await fs.readFile(
-    path.join(process.cwd(), "public/greenfuel-logo.png")
-  );
+  const logoBytes = await fs.readFile(path.join(process.cwd(), "public/greenfuel-logo.png"));
   const logo = await pdfDoc.embedPng(logoBytes);
   const logoDims = logo.scale(0.095);
 
@@ -97,8 +94,9 @@ export async function GET(req, ctx) {
   ];
 
   const empRowH = empH / empRows.length;
+
   empRows.forEach((r, i) => {
-    const ty = y - empRowH * (i + 0.68);
+    const ty = centerY(y - empRowH * i, empRowH, 9);
     page.drawText(r[0], { x: 45, y: ty, size: 9, font: bold });
     page.drawText(r[1] ?? "", { x: 125, y: ty, size: 9, font });
     page.drawText(r[2], { x: 305, y: ty, size: 9, font: bold });
@@ -125,7 +123,7 @@ export async function GET(req, ctx) {
 
   hLine(40, y - 28, 515);
 
-  const ay = y - 44;
+  const ay = centerY(y - 28, assetH - 28, 9);
   page.drawText("1", { x: 50, y: ay, size: 9, font });
   page.drawText(issue.asset_type || "Laptop/Desktop", { x: 80, y: ay, size: 9, font });
   page.drawText(issue.asset_code, { x: 160, y: ay, size: 9, font });
@@ -192,17 +190,13 @@ export async function GET(req, ctx) {
 
   const osH = osRows.length * 14 + 12;
   drawBox(40, y - osH, 515, osH);
-
-  [40, 140, 250, 400, 555].forEach(x =>
-    vLine(x, y - osH, osH)
-  );
-
+  [40, 140, 250, 400, 555].forEach(x => vLine(x, y - osH, osH));
 
   const osRowH = osH / osRows.length;
   osRows.forEach((r, i) => {
-    const ty = y - osRowH * (i + 0.7);
+    const ty = centerY(y - osRowH * i, osRowH, 9);
     page.drawText(r[0], { x: 45, y: ty, size: 9, font: bold });
-    page.drawText(r[1] ?? "", { x: 140, y: ty, size: 9, font });
+    page.drawText(r[1] ?? "", { x: 145, y: ty, size: 9, font });
     page.drawText(r[2], { x: 255, y: ty, size: 9, font: bold });
     page.drawText(r[3] ?? "", { x: 420, y: ty, size: 9, font });
     if (i < osRows.length - 1) hLine(40, y - osRowH * (i + 1), 515);
@@ -211,8 +205,7 @@ export async function GET(req, ctx) {
   y -= osH + 14;
 
   /* ================= SIGNATURES ================= */
-  const boxW = 160,
-    boxH = 46;
+  const boxW = 160, boxH = 46;
   drawBox(40, y - boxH, boxW, boxH);
   drawBox(220, y - boxH, boxW, boxH);
   drawBox(400, y - boxH, boxW, boxH);
@@ -223,7 +216,6 @@ export async function GET(req, ctx) {
 
   /* ================= RESPONSE ================= */
   const pdfBytes = await pdfDoc.save();
-
   return new Response(pdfBytes, {
     headers: {
       "Content-Type": "application/pdf",
