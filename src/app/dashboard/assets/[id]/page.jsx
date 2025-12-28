@@ -1,10 +1,20 @@
 // src/app/dashboard/assets/[id]/page.jsx
 
 "use client";
+
 import { useState, useEffect } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Edit, Save } from "lucide-react";
+import {
+  ArrowLeft,
+  Edit,
+  Save,
+  UserPlus,
+  ArrowRightLeft,
+  RotateCcw,
+  Trash2,
+  Settings,
+} from "lucide-react";
 
 export default function AssetDetailPage() {
   const router = useRouter();
@@ -18,6 +28,9 @@ export default function AssetDetailPage() {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState([]);
 
+  /* ============================
+     Fetch Asset + History
+  ============================ */
   useEffect(() => {
     const fetchAll = async () => {
       const token = localStorage.getItem("token");
@@ -47,7 +60,9 @@ export default function AssetDetailPage() {
     fetchAll();
   }, [id]);
 
-
+  /* ============================
+     Handlers
+  ============================ */
   const onChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -74,6 +89,43 @@ export default function AssetDetailPage() {
 
   if (loading) return <p className="text-gray-400">Loading asset…</p>;
 
+  /* ============================
+     Icon + Message Mapper
+  ============================ */
+  const getEventMeta = (h) => {
+    switch (h.event_type) {
+      case "ISSUED":
+        return {
+          icon: <UserPlus size={14} className="text-blue-400" />,
+          text: `Issued to ${h.employee_name} (${h.emp_code})`,
+        };
+
+      case "TRANSFER":
+        return {
+          icon: <ArrowRightLeft size={14} className="text-yellow-400" />,
+          text: `Transferred from ${h.from_emp_code} to ${h.to_emp_code}`,
+        };
+
+      case "RETURNED":
+        return {
+          icon: <RotateCcw size={14} className="text-gray-400" />,
+          text: "Returned to Inventory",
+        };
+
+      case "GARBAGE":
+        return {
+          icon: <Trash2 size={14} className="text-red-400" />,
+          text: "Marked as Garbage",
+        };
+
+      default:
+        return {
+          icon: <Settings size={14} className="text-purple-400" />,
+          text: h.description || "System update",
+        };
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -81,7 +133,7 @@ export default function AssetDetailPage() {
       transition={{ duration: 0.3 }}
       className="space-y-8"
     >
-      {/* Header */}
+      {/* ================= Header ================= */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold text-white">
@@ -102,7 +154,9 @@ export default function AssetDetailPage() {
 
           {!isEdit && (
             <button
-              onClick={() => router.push(`/dashboard/assets/${id}?mode=edit`)}
+              onClick={() =>
+                router.push(`/dashboard/assets/${id}?mode=edit`)
+              }
               className="px-4 py-2 rounded-xl bg-green-600 hover:bg-green-700 flex items-center gap-2"
             >
               <Edit size={16} /> Edit
@@ -111,7 +165,7 @@ export default function AssetDetailPage() {
         </div>
       </div>
 
-      {/* Details Card */}
+      {/* ================= Details ================= */}
       <form
         onSubmit={onSubmit}
         className="bg-gray-900/70 backdrop-blur-xl border border-gray-700 rounded-2xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6 shadow-xl"
@@ -149,60 +203,44 @@ export default function AssetDetailPage() {
         ))}
       </form>
 
-              {/* Asset Usage History */}
-        <div className="bg-gray-900/70 border border-gray-700 rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-green-400 mb-4">
-            Asset Usage History
-          </h3>
+      {/* ================= Asset Usage History ================= */}
+      <div className="bg-gray-900/70 border border-gray-700 rounded-2xl p-6">
+        <h3 className="text-lg font-semibold text-green-400 mb-4">
+          Asset Usage History
+        </h3>
 
-          {history.length === 0 ? (
-            <p className="text-gray-400 text-sm">
-              No usage history found for this asset.
-            </p>
-          ) : (
-            <ol className="relative border-l border-gray-700 space-y-6">
-              {history.map((h, idx) => (
+        {history.length === 0 ? (
+          <p className="text-gray-400 text-sm">
+            No usage history found for this asset.
+          </p>
+        ) : (
+          <ol className="relative border-l border-gray-700 space-y-6">
+            {history.map((h, idx) => {
+              const { icon, text } = getEventMeta(h);
+
+              return (
                 <li key={idx} className="ml-6">
                   <span className="absolute -left-1.5 h-3 w-3 rounded-full bg-green-500" />
 
-                  <p className="text-sm text-white font-medium">
-                    {h.event_type === "ISSUED" && (
-                      <>Issued to <b>{h.employee_name}</b> ({h.emp_code})</>
-                    )}
-
-                    {h.event_type === "TRANSFER" && (
-                      <>Transferred from <b>{h.from_emp_code}</b> to <b>{h.to_emp_code}</b></>
-                    )}
-
+                  <div className="flex items-start gap-2">
+                    {icon}
                     <p className="text-sm text-white font-medium">
-                      {h.event_type === "ISSUED" && (
-                        <>Issued to <b>{h.employee_name}</b> ({h.emp_code})</>
-                      )}
-
-                      {h.event_type === "TRANSFER" && (
-                        <>Transferred from <b>{h.from_emp_code}</b> to <b>{h.to_emp_code}</b></>
-                      )}
-
-                      {h.event_type === "RETURNED" && <>Returned to Inventory</>}
-
-                      {h.event_type === "GARBAGE" && <>Marked as Garbage</>}
-
-                      {h.event_type === "SYSTEM" && <>{h.description}</>}
+                      {text}
                     </p>
-                  </p>
+                  </div>
 
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-400 mt-1 ml-6">
                     {new Date(h.event_date).toLocaleString()}
                     {h.performed_by && ` • ${h.performed_by}`}
                   </p>
                 </li>
-              ))}
-            </ol>
-          )}
-        </div>
+              );
+            })}
+          </ol>
+        )}
+      </div>
 
-
-      {/* Sticky Save */}
+      {/* ================= Sticky Save ================= */}
       {isEdit && (
         <div className="sticky bottom-4 flex justify-end">
           <button
