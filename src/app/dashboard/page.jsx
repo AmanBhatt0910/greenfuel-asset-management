@@ -59,7 +59,7 @@ export default function Dashboard() {
   }, [router]);
 
   if (!stats) {
-    return <p className="text-gray-400">Loading dashboard…</p>;
+    return <p className="text-secondary">Loading dashboard…</p>;
   }
 
   const totalPages = Math.ceil(history.length / ITEMS_PER_PAGE);
@@ -115,7 +115,7 @@ export default function Dashboard() {
           <h2 className="text-4xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
             Dashboard
           </h2>
-          <p className="text-gray-400 mt-1">
+          <p className="text-secondary mt-1">
             Overview of assets and system status
           </p>
         </div>
@@ -134,18 +134,18 @@ export default function Dashboard() {
             <motion.div
               key={i}
               whileHover={{ y: -6 }}
-              className="relative overflow-hidden rounded-2xl border border-gray-700/60 bg-gray-900/70 backdrop-blur-xl shadow-lg"
+              className="relative overflow-hidden rounded-2xl border border-[color:var(--border)]/60 surface backdrop-blur-xl shadow-lg"
             >
               <div className="relative p-6 flex items-center gap-4">
                 <div
-                  className={`p-4 rounded-xl bg-gradient-to-br ${s.gradient} text-white shadow-lg`}
+                  className={`p-4 rounded-xl bg-gradient-to-br ${s.gradient} text-primary shadow-lg`}
                 >
                   <Icon size={24} />
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-400">{s.title}</p>
-                  <p className="text-3xl font-bold text-white">
+                  <p className="text-sm text-secondary">{s.title}</p>
+                  <p className="text-3xl font-bold text-primary">
                     {s.count}
                   </p>
                 </div>
@@ -158,8 +158,8 @@ export default function Dashboard() {
       {/* Charts + Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pie Chart */}
-        <div className="rounded-2xl border border-gray-700 bg-gray-900/70 p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-white mb-4">
+        <div className="rounded-2xl border border-[color:var(--border)] surface p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-primary mb-4">
             Asset Status Distribution
           </h3>
 
@@ -185,22 +185,22 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Activity (Paginated) */}
-        <div className="rounded-2xl border border-gray-700 bg-gray-900/70 p-6 shadow-lg">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+        <div className="rounded-2xl border border-[color:var(--border)] surface p-6 shadow-lg">
+          <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
             <History size={18} />
             Recent Activity
           </h3>
 
           <div className="space-y-4">
             {paginatedHistory.length === 0 ? (
-              <p className="text-gray-400 text-sm">
+              <p className="text-secondary text-sm">
                 No recent activity
               </p>
             ) : (
               paginatedHistory.map((h) => (
                 <div
                   key={h.id}
-                  className="p-3 rounded-xl border border-gray-700 bg-gray-800/60"
+                  className="p-3 rounded-xl border border-[color:var(--border)] surface-muted"
                 >
                   <p className="text-sm text-gray-200">
                     {h.description}
@@ -219,19 +219,19 @@ export default function Dashboard() {
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="px-3 py-1 rounded-lg text-sm bg-gray-800 border border-gray-700 disabled:opacity-40"
+                className="px-3 py-1 rounded-lg text-sm bg-gray-800 border border-[color:var(--border)] disabled:opacity-40"
               >
                 Previous
               </button>
 
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-secondary">
                 Page {currentPage} of {totalPages}
               </span>
 
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="px-3 py-1 rounded-lg text-sm bg-gray-800 border border-gray-700 disabled:opacity-40"
+                className="px-3 py-1 rounded-lg text-sm bg-gray-800 border border-[color:var(--border)] disabled:opacity-40"
               >
                 Next
               </button>

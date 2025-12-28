@@ -51,7 +51,7 @@ export default function Sidebar() {
     <aside
       className={`h-screen transition-all duration-300 ease-in-out ${
         collapsed ? "w-20" : "w-72"
-      } bg-gradient-to-b from-gray-950 via-gray-900 to-black text-white flex flex-col border-r border-gray-800/50 sticky top-0 backdrop-blur-xl relative overflow-hidden`}
+      } surface dark:bg-gradient-to-b dark:from-gray-950 dark:via-gray-900 dark:to-black flex flex-col border-r border-gray-800/50 sticky top-0 backdrop-blur-xl relative overflow-hidden`}
     >
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-to-b from-green-500/5 via-transparent to-green-500/5 pointer-events-none"></div>

@@ -1,4 +1,7 @@
+// src/app/page.js
+
 "use client";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Leaf, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
@@ -52,33 +55,41 @@ export default function LoginPage() {
   if (!mounted) return null;
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-black via-gray-900 to-green-950 relative overflow-hidden">
+    <div
+      className={`
+        flex min-h-screen relative overflow-hidden
+        bg-gradient-to-br
+        from-[color:var(--background)]
+        via-[color:var(--surface)]
+        to-[color:var(--accent-soft)]
+      `}
+    >
       {/* Background dots */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-2 h-2 bg-green-400/30 rounded-full animate-pulse" />
-        <div className="absolute top-40 right-20 w-1 h-1 bg-green-300/40 rounded-full animate-pulse delay-1000" />
-        <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 bg-green-500/25 rounded-full animate-pulse delay-2000" />
+        <div className="absolute top-20 left-10 w-2 h-2 rounded-full animate-pulse bg-[color:var(--accent)]/30" />
+        <div className="absolute top-40 right-20 w-1 h-1 rounded-full animate-pulse delay-1000 bg-[color:var(--accent)]/40" />
+        <div className="absolute bottom-32 left-1/4 w-1.5 h-1.5 rounded-full animate-pulse delay-2000 bg-[color:var(--accent)]/25" />
       </div>
 
       {/* Left branding */}
-      <div className="hidden lg:flex flex-col justify-center items-center w-1/2 px-10 text-white">
+      <div className="hidden lg:flex flex-col justify-center items-center w-1/2 px-10">
         <div className="relative mb-8">
-          <div className="absolute inset-0 bg-green-400/20 rounded-full blur-xl scale-150 animate-pulse" />
-          <div className="relative bg-green-400/10 p-4 rounded-2xl border border-green-400/30">
-            <Leaf size={60} className="text-green-400" />
+          <div className="absolute inset-0 accent-bg rounded-full blur-xl scale-150 animate-pulse" />
+          <div className="relative accent-bg p-4 rounded-2xl border border-[color:var(--accent)]/30">
+            <Leaf size={60} className="accent" />
           </div>
         </div>
 
         <h1 className="text-5xl font-bold mb-6 text-center">
-          <span className="bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+          <span className="gradient-accent bg-clip-text text-transparent">
             Greenfuel
           </span>
-          <span className="block text-2xl text-gray-300 mt-2">
+          <span className="block text-2xl text-secondary mt-2">
             Asset Management
           </span>
         </h1>
 
-        <p className="text-lg text-gray-300 text-center max-w-md">
+        <p className="text-lg text-secondary text-center max-w-md">
           Securely manage and transfer company assets with confidence.
         </p>
       </div>
@@ -86,26 +97,25 @@ export default function LoginPage() {
       {/* Login form */}
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="w-full max-w-md">
-          <div className="relative p-8 rounded-2xl shadow-2xl border border-gray-700/50 bg-gray-900/70 backdrop-blur-xl">
-
+          <div className="relative p-8 rounded-2xl shadow-2xl surface backdrop-blur-xl border border-[color:var(--border)]/50">
             <div className="flex justify-center mb-8">
               <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-green-400/10 border border-green-400/20">
-                  <Lock className="text-green-400" size={24} />
+                <div className="p-2 rounded-lg accent-bg border border-[color:var(--accent)]/20">
+                  <Lock className="accent" size={24} />
                 </div>
-                <h2 className="text-3xl font-bold text-white">Login</h2>
+                <h2 className="text-3xl font-bold text-primary">Login</h2>
               </div>
             </div>
 
             {error && (
-              <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center animate-shake">
+              <div className="mb-6 p-4 rounded-xl bg-[color:var(--danger)]/10 border border-[color:var(--danger)]/20 text-danger text-sm text-center animate-shake">
                 {error}
               </div>
             )}
 
             <form onSubmit={handleLogin} className="space-y-6">
               <div>
-                <label className="block text-gray-300 mb-2 text-sm font-medium">
+                <label className="block text-secondary mb-2 text-sm font-medium">
                   Email
                 </label>
                 <input
@@ -113,13 +123,13 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@greenfuel.com"
-                  className="w-full px-4 py-4 rounded-xl bg-gray-800/50 border border-gray-700/50 text-white focus:ring-2 focus:ring-green-500/50"
+                  className="w-full px-4 py-4 rounded-xl surface-muted border border-[color:var(--border)]/50 text-primary focus:ring-2 focus:ring-[color:var(--accent)]/50"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-gray-300 mb-2 text-sm font-medium">
+                <label className="block text-secondary mb-2 text-sm font-medium">
                   Password
                 </label>
                 <div className="relative">
@@ -128,13 +138,13 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="********"
-                    className="w-full px-4 py-4 pr-12 rounded-xl bg-gray-800/50 border border-gray-700/50 text-white focus:ring-2 focus:ring-green-500/50"
+                    className="w-full px-4 py-4 pr-12 rounded-xl surface-muted border border-[color:var(--border)]/50 text-primary focus:ring-2 focus:ring-[color:var(--accent)]/50"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-green-400"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:accent"
                   >
                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -144,12 +154,19 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group w-full py-4 bg-gradient-to-r from-green-600 to-green-700 rounded-xl font-semibold text-white hover:from-green-500 hover:to-green-600 transition-all disabled:opacity-50"
+                className={`
+                  group w-full py-4 rounded-xl font-semibold
+                  transition-all disabled:opacity-50
+                  bg-gradient-to-r
+                  from-[color:var(--accent-strong)]
+                  to-[color:var(--accent)]
+                  text-primary
+                `}
               >
                 <span className="flex items-center justify-center space-x-2">
                   {loading ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-[color:var(--foreground)]/30 border-t-[color:var(--foreground)] rounded-full animate-spin" />
                       <span>Logging in...</span>
                     </>
                   ) : (
@@ -162,16 +179,15 @@ export default function LoginPage() {
               </button>
             </form>
 
-            {/* ✅ Forgot password REMOVED */}
-            <p className="mt-8 text-xs text-gray-500 text-center">
+            <p className="mt-8 text-xs text-secondary text-center">
               Authorized personnel only
             </p>
           </div>
 
           {/* Mobile branding */}
           <div className="lg:hidden mt-8 text-center">
-            <Leaf size={22} className="text-green-400 inline-block mr-2" />
-            <span className="text-lg font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+            <Leaf size={22} className="accent inline-block mr-2" />
+            <span className="text-lg font-bold gradient-accent bg-clip-text text-transparent">
               Greenfuel
             </span>
           </div>
@@ -183,7 +199,7 @@ export default function LoginPage() {
           animation: shake 0.4s ease-in-out;
         }
         @keyframes shake {
-          0%,100% { transform: translateX(0); }
+          0%, 100% { transform: translateX(0); }
           25% { transform: translateX(-5px); }
           75% { transform: translateX(5px); }
         }
