@@ -55,6 +55,22 @@ export default function NewAssetIssueForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!formData.asset_code) {
+      alert("Please select an asset");
+      return;
+    }
+
+    if (!formData.employee_name || !formData.emp_code) {
+      alert("Employee details are required");
+      return;
+    }
+
+    if (formData.terms !== "agreed") {
+      alert("You must agree to terms & conditions");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -68,15 +84,21 @@ export default function NewAssetIssueForm() {
         body: JSON.stringify(formData),
       });
 
-      if (!res.ok) throw new Error("Failed to create issue");
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.message || "Failed to create issue");
+      }
 
       router.push("/dashboard/issues");
     } catch (err) {
-      alert("Failed to create issue");
+      alert(err.message);
     } finally {
       setSubmitting(false);
     }
   };
+
+
 
   return (
     <motion.div
@@ -245,9 +267,16 @@ export default function NewAssetIssueForm() {
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={submitting}
+            disabled={
+              submitting ||
+              !formData.asset_code ||
+              !formData.employee_name ||
+              !formData.emp_code ||
+              formData.terms !== "agreed"
+            }
             className="px-6 py-3 rounded-xl bg-green-600 hover:bg-green-700 font-semibold flex items-center gap-2 shadow-lg disabled:opacity-50"
           >
+
             <FileCheck size={18} />
             {submitting ? "Submitting..." : "Issue Asset"}
           </button>

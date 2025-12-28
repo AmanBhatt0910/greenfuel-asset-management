@@ -21,10 +21,13 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+const ITEMS_PER_PAGE = 5;
+
 export default function Dashboard() {
   const router = useRouter();
   const [stats, setStats] = useState(null);
   const [history, setHistory] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -39,7 +42,8 @@ export default function Dashboard() {
           fetch("/api/dashboard/stats", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch("/api/history?limit=5", {
+          // ⬇️ Fetch more once, paginate on frontend
+          fetch("/api/history?limit=50", {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -57,6 +61,13 @@ export default function Dashboard() {
   if (!stats) {
     return <p className="text-gray-400">Loading dashboard…</p>;
   }
+
+  const totalPages = Math.ceil(history.length / ITEMS_PER_PAGE);
+
+  const paginatedHistory = history.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const cards = [
     {
@@ -173,7 +184,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Activity (Paginated) */}
         <div className="rounded-2xl border border-gray-700 bg-gray-900/70 p-6 shadow-lg">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <History size={18} />
@@ -181,12 +192,12 @@ export default function Dashboard() {
           </h3>
 
           <div className="space-y-4">
-            {history.length === 0 ? (
+            {paginatedHistory.length === 0 ? (
               <p className="text-gray-400 text-sm">
                 No recent activity
               </p>
             ) : (
-              history.map((h) => (
+              paginatedHistory.map((h) => (
                 <div
                   key={h.id}
                   className="p-3 rounded-xl border border-gray-700 bg-gray-800/60"
@@ -201,6 +212,31 @@ export default function Dashboard() {
               ))
             )}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+                className="px-3 py-1 rounded-lg text-sm bg-gray-800 border border-gray-700 disabled:opacity-40"
+              >
+                Previous
+              </button>
+
+              <span className="text-xs text-gray-400">
+                Page {currentPage} of {totalPages}
+              </span>
+
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+                className="px-3 py-1 rounded-lg text-sm bg-gray-800 border border-gray-700 disabled:opacity-40"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

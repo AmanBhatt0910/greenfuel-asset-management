@@ -31,11 +31,17 @@ export async function GET(req) {
         a.warranty_end,
         a.status,
         a.created_at,
-        i.id AS issue_id
+
+        /* Latest issue only (if issued) */
+        (
+          SELECT i.id
+          FROM issues i
+          WHERE i.asset_code = a.asset_code
+          ORDER BY i.created_at DESC
+          LIMIT 1
+        ) AS issue_id
+
       FROM assets a
-      LEFT JOIN issues i
-        ON a.asset_code = i.asset_code
-        AND a.status = 'ISSUED'
     `;
 
     if (availableOnly) {
@@ -61,10 +67,7 @@ export async function GET(req) {
 export async function POST(req) {
   const auth = verifyAuth(req);
   if (!auth.ok) {
-    return new Response(
-      JSON.stringify({ message: auth.error }),
-      { status: 401 }
-    );
+    return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
   }
 
   try {
@@ -81,8 +84,7 @@ export async function POST(req) {
     }
 
     const query = `
-      INSERT INTO assets
-      (
+      INSERT INTO assets (
         asset_code,
         make,
         model,

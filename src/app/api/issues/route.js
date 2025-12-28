@@ -81,13 +81,21 @@ export async function POST(req) {
       return new Response(JSON.stringify({ message: "Asset not found" }), { status: 404 });
     }
 
-    if (asset.status !== "IN_STOCK") {
+    if (asset.status === "ISSUED") {
       await conn.rollback();
       return new Response(
-        JSON.stringify({ message: "Asset is not available for issue" }),
+        JSON.stringify({ message: "Asset is already issued" }),
         { status: 409 }
       );
     }
+
+      if (asset.status !== "IN_STOCK") {
+        await conn.rollback();
+        return new Response(
+          JSON.stringify({ message: "Asset cannot be issued in current state" }),
+          { status: 409 }
+        );
+      }
 
     await conn.query(
       `INSERT INTO issues
