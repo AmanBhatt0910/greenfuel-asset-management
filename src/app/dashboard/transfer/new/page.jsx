@@ -99,8 +99,20 @@ export default function AssetTransferRequest() {
     handleChange("to_location", user.location || "");
   };
 
+  const isFormValid =
+  formData.asset_code &&
+  formData.from_emp_code &&
+  formData.to_emp_code &&
+  formData.to_emp_code !== formData.from_emp_code;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!isFormValid) {
+    setMessage("Please select asset and target employee before submitting.");
+    return;
+  }
+
     setLoading(true);
     setMessage("");
 
