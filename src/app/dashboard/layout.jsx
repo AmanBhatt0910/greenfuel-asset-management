@@ -1,5 +1,3 @@
-// src/app/dashboard/layout.jsx
-
 "use client";
 
 import { motion } from "framer-motion";
@@ -8,7 +6,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 
 export default function DashboardLayout({ children }) {
   return (
-    <div className="flex min-h-screen bg-[color:var(--background)] text-[color:var(--foreground)]">
+    <div className="flex min-h-screen">
       <Sidebar />
 
       <main className="flex-1 flex flex-col overflow-hidden">

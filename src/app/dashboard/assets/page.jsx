@@ -16,20 +16,18 @@ import {
 import { useRouter } from "next/navigation";
 
 /* ============================
-   Status Badge
+   Status Badge (token-based)
 ============================ */
 const StatusBadge = ({ status }) => {
   const styles = {
-    IN_STOCK: "bg-green-500/10 text-green-400 border-green-500/30",
-    ISSUED: "bg-blue-500/10 text-blue-400 border-blue-500/30",
-    GARBAGE: "bg-red-500/10 text-red-400 border-red-500/30",
+    IN_STOCK: "accent-bg accent border-default",
+    ISSUED: "text-info border-default surface-muted",
+    GARBAGE: "text-danger border-default surface-muted",
   };
 
   return (
     <span
-      className={`px-2 py-0.5 rounded-md text-xs border ${
-        styles[status] || ""
-      }`}
+      className={`px-2 py-0.5 rounded-md text-xs ${styles[status] || ""}`}
     >
       {status.replace("_", " ")}
     </span>
@@ -46,7 +44,6 @@ export default function AssetsPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
 
-  /* Fetch assets */
   useEffect(() => {
     const run = async () => {
       try {
@@ -64,7 +61,6 @@ export default function AssetsPage() {
     run();
   }, []);
 
-  /* Counts per status */
   const counts = useMemo(() => {
     return {
       ALL: rows.length,
@@ -74,16 +70,13 @@ export default function AssetsPage() {
     };
   }, [rows]);
 
-  /* Filtered rows (status + search) */
   const filteredRows = useMemo(() => {
     let result = rows;
 
-    // 1️⃣ Status filter
     if (statusFilter !== "ALL") {
       result = result.filter((r) => r.status === statusFilter);
     }
 
-    // 2️⃣ Search filter (asset code OR serial no)
     if (searchTerm.trim()) {
       const q = searchTerm.toLowerCase();
       result = result.filter(
@@ -96,8 +89,8 @@ export default function AssetsPage() {
     return result;
   }, [rows, statusFilter, searchTerm]);
 
-  if (state.loading) return <p className="text-gray-400">Loading assets…</p>;
-  if (state.error) return <p className="text-red-400">{state.error}</p>;
+  if (state.loading) return <p className="text-secondary">Loading assets…</p>;
+  if (state.error) return <p className="text-danger">{state.error}</p>;
 
   return (
     <motion.div
@@ -108,15 +101,14 @@ export default function AssetsPage() {
     >
       {/* Header */}
       <div>
-        <h2 className="text-3xl font-bold text-white">Asset Inventory</h2>
-        <p className="text-gray-400 text-sm">
+        <h2 className="text-3xl font-bold text-primary">Asset Inventory</h2>
+        <p className="text-secondary text-sm">
           View and manage all registered assets
         </p>
       </div>
 
-      {/* Filters Row */}
+      {/* Filters */}
       <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
-        {/* Status Filters */}
         <div className="flex flex-wrap gap-2">
           {[
             { key: "ALL", label: "All" },
@@ -127,15 +119,17 @@ export default function AssetsPage() {
             <button
               key={f.key}
               onClick={() => setStatusFilter(f.key)}
-              className={`px-4 py-1.5 rounded-full text-sm border transition-all
+              className={`
+                px-4 py-1.5 rounded-full text-sm border transition-all
                 ${
                   statusFilter === f.key
-                    ? "bg-green-600 text-white border-green-600"
-                    : "bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700"
-                }`}
+                    ? "accent-bg accent border-default"
+                    : "surface-muted text-secondary border-default hover:surface"
+                }
+              `}
             >
               {f.label}
-              <span className="ml-2 text-xs opacity-80">
+              <span className="ml-2 text-xs opacity-70">
                 ({counts[f.key]})
               </span>
             </button>
@@ -146,22 +140,28 @@ export default function AssetsPage() {
         <div className="relative w-full lg:w-80">
           <Search
             size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary"
           />
           <input
             type="text"
             placeholder="Search by Asset Code or Serial No"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-xl bg-gray-900 border border-gray-700 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/40"
+            className={`
+              w-full pl-9 pr-3 py-2 rounded-xl
+              surface border-default
+              text-sm text-primary placeholder:text-secondary
+              focus:outline-none focus:ring-2 focus:ring-accent-soft
+              transition-shadow
+            `}
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto bg-gray-900/70 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-xl">
+      <div className="overflow-x-auto surface border-default rounded-2xl shadow-xl">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-800 text-gray-300 text-xs uppercase">
+          <thead className="surface-muted text-secondary text-xs uppercase">
             <tr>
               {[
                 "Asset Code",
@@ -184,7 +184,7 @@ export default function AssetsPage() {
               <tr>
                 <td
                   colSpan={7}
-                  className="px-6 py-8 text-center text-gray-400"
+                  className="px-6 py-8 text-center text-secondary"
                 >
                   No assets found
                 </td>
@@ -193,15 +193,13 @@ export default function AssetsPage() {
               filteredRows.map((r) => (
                 <motion.tr
                   key={r.id}
-                  whileHover={{
-                    backgroundColor: "rgba(16,185,129,0.06)",
-                  }}
-                  className="border-t border-gray-800"
+                  whileHover={{ backgroundColor: "var(--surface-muted)" }}
+                  className="border-t border-default text-primary"
                 >
-                  <td className="px-6 py-4 font-medium">{r.asset_code}</td>
-                  <td className="px-6 py-4">
-                    {r.make} {r.model}
+                  <td className="px-6 py-4 font-medium">
+                    {r.asset_code}
                   </td>
+                  <td className="px-6 py-4">{r.make} {r.model}</td>
                   <td className="px-6 py-4">{r.serial_no}</td>
                   <td className="px-6 py-4">{r.vendor || "-"}</td>
                   <td className="px-6 py-4">
@@ -212,82 +210,103 @@ export default function AssetsPage() {
                   </td>
 
                   {/* Actions */}
-                  <td className="px-6 py-4 flex flex-wrap gap-2">
-                    <button
-                      onClick={() =>
-                        router.push(
-                          `/dashboard/assets/${r.id}?mode=view`
-                        )
-                      }
-                      className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1"
-                    >
-                      <Eye size={14} /> View
-                    </button>
-
-                    {r.status !== "GARBAGE" && (
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() =>
-                          router.push(
-                            `/dashboard/assets/${r.id}?mode=edit`
-                          )
+                          router.push(`/dashboard/assets/${r.id}?mode=view`)
                         }
-                        className="px-3 py-1 rounded-lg bg-green-600 hover:bg-green-700 text-white flex items-center gap-1"
+                        className={`
+                          px-3 py-1.5 rounded-lg text-xs font-medium
+                          surface border-default text-primary
+                          hover:surface-muted transition-colors
+                          flex items-center gap-1 shadow-sm
+                        `}
                       >
-                        <Edit size={14} /> Edit
+                        <Eye size={14} /> View
                       </button>
-                    )}
 
-                    {r.status === "IN_STOCK" && (
-                      <>
+                      {r.status !== "GARBAGE" && (
                         <button
                           onClick={() =>
-                            router.push(
-                              `/dashboard/issues/new?asset=${r.asset_code}`
-                            )
+                            router.push(`/dashboard/assets/${r.id}?mode=edit`)
                           }
-                          className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1"
+                          className={`
+                            px-3 py-1.5 rounded-lg text-xs font-semibold
+                            gradient-accent text-white
+                            hover:opacity-90 transition-opacity
+                            flex items-center gap-1 shadow-md
+                          `}
                         >
-                          <UserPlus size={14} /> Issue
+                          <Edit size={14} /> Edit
                         </button>
+                      )}
 
-                        <button
-                          onClick={() =>
-                            router.push(
-                              `/dashboard/garbage?asset=${r.asset_code}`
-                            )
-                          }
-                          className="px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white flex items-center gap-1"
-                        >
-                          <Trash2 size={14} /> Garbage
-                        </button>
-                      </>
-                    )}
+                      {r.status === "IN_STOCK" && (
+                        <>
+                          <button
+                            onClick={() =>
+                              router.push(`/dashboard/issues/new?asset=${r.asset_code}`)
+                            }
+                            className={`
+                              px-3 py-1.5 rounded-lg text-xs font-medium
+                              surface border-default text-info
+                              hover:surface-muted transition-colors
+                              flex items-center gap-1 shadow-sm
+                            `}
+                          >
+                            <UserPlus size={14} /> Issue
+                          </button>
 
-                    {r.status === "ISSUED" && (
-                      <>
-                        <button
-                          onClick={() =>
-                            router.push(
-                              `/dashboard/transfer/new?asset=${r.asset_code}`
-                            )
-                          }
-                          className="px-3 py-1 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-white flex items-center gap-1"
-                        >
-                          <ArrowRightLeft size={14} /> Transfer
-                        </button>
+                          <button
+                            onClick={() =>
+                              router.push(`/dashboard/garbage?asset=${r.asset_code}`)
+                            }
+                            className={`
+                              px-3 py-1.5 rounded-lg text-xs font-medium
+                              surface border-default text-danger
+                              hover:surface-muted transition-colors
+                              flex items-center gap-1 shadow-sm
+                            `}
+                          >
+                            <Trash2 size={14} /> Garbage
+                          </button>
+                        </>
+                      )}
 
-                        <button
-                          onClick={() =>
-                            router.push(
-                              `/dashboard/assets/return?issue=${r.issue_id}`
-                            )
-                          }
-                          className="px-3 py-1 rounded-lg bg-gray-600 hover:bg-gray-700 text-white flex items-center gap-1"
-                        >
-                          <RotateCcw size={14} /> Return
-                        </button>
-                      </>
-                    )}
+                      {r.status === "ISSUED" && (
+                        <>
+                          <button
+                            onClick={() =>
+                              router.push(`/dashboard/transfer/new?asset=${r.asset_code}`)
+                            }
+                            className={`
+                              px-3 py-1.5 rounded-lg text-xs font-medium
+                              surface border-default
+                              hover:surface-muted transition-colors
+                              flex items-center gap-1 shadow-sm
+                            `}
+                            style={{ color: 'var(--warning)' }}
+                          >
+                            <ArrowRightLeft size={14} /> Transfer
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              router.push(`/dashboard/assets/return?issue=${r.issue_id}`)
+                            }
+                            className={`
+                              px-3 py-1.5 rounded-lg text-xs font-medium
+                              surface border-default text-secondary
+                              hover:surface-muted transition-colors
+                              flex items-center gap-1 shadow-sm
+                            `}
+                          >
+                            <RotateCcw size={14} /> Return
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </motion.tr>
               ))

@@ -26,7 +26,7 @@ export default function GarbageClient() {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      setAssets(data.filter(a => a.status === "IN_STOCK"));
+      setAssets(data.filter((a) => a.status === "IN_STOCK"));
     };
     fetchAssets();
   }, []);
@@ -35,7 +35,7 @@ export default function GarbageClient() {
     e.preventDefault();
     if (!form.confirm) return alert("Please confirm garbage action");
 
-    const asset = assets.find(a => a.asset_code === form.asset_code);
+    const asset = assets.find((a) => a.asset_code === form.asset_code);
     if (!asset) return alert("Invalid asset selected");
 
     setLoading(true);
@@ -61,18 +61,21 @@ export default function GarbageClient() {
 
   return (
     <div className="max-w-2xl space-y-6">
-      <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-        <Trash2 className="text-red-400" /> Mark Asset as Garbage
+      {/* Header */}
+      <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
+        <Trash2 className="text-danger" />
+        Mark Asset as Garbage
       </h2>
 
+      {/* Form */}
       <form
         onSubmit={submit}
-        className="bg-gray-900 border border-gray-700 rounded-2xl p-6 space-y-6"
+        className="surface border border-default rounded-2xl p-6 space-y-6"
       >
         <FormSelect
           label="Select Asset"
           value={form.asset_code}
-          options={assets.map(a => a.asset_code)}
+          options={assets.map((a) => a.asset_code)}
           onChange={(e) =>
             setForm({ ...form, asset_code: e.target.value })
           }
@@ -87,10 +90,10 @@ export default function GarbageClient() {
           }
         />
 
-        <label className="flex items-center gap-2 text-sm text-gray-300">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input
             type="checkbox"
-            className="accent-red-500"
+            className="accent"
             checked={form.confirm}
             onChange={(e) =>
               setForm({ ...form, confirm: e.target.checked })
@@ -103,7 +106,10 @@ export default function GarbageClient() {
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-semibold disabled:opacity-50"
+            className="px-6 py-3 rounded-lg font-semibold
+                       border border-default
+                       text-danger accent-bg
+                       disabled:opacity-50"
           >
             {loading ? "Processing..." : "Mark as Garbage"}
           </button>

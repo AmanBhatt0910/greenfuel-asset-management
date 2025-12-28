@@ -9,7 +9,7 @@ export default function FormInput({
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label className="text-xs font-medium text-gray-400">
+        <label className="text-xs font-medium text-secondary">
           {label}
         </label>
       )}
@@ -22,14 +22,14 @@ export default function FormInput({
         readOnly={readOnly}
         className={`
           w-full px-4 py-2.5 rounded-xl text-sm
-          bg-gray-800 border border-gray-700
-          text-white placeholder-gray-500
-          focus:outline-none focus:ring-2 focus:ring-green-500/40
+          surface border border-default
+          text-primary
+          focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]/40
           transition-all
           ${
             readOnly
-              ? "cursor-not-allowed bg-gray-900 text-gray-400"
-              : "hover:border-gray-600"
+              ? "cursor-not-allowed surface-muted text-secondary"
+              : "hover:border-[color:var(--border)]"
           }
         `}
       />

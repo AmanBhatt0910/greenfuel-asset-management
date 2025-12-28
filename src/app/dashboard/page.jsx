@@ -119,7 +119,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl accent-bg border border-[color:var(--accent)]/20 accent text-sm">
+        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl accent-bg border-default accent text-sm">
           <TrendingUp size={16} />
           System Healthy
         </div>
@@ -133,10 +133,10 @@ export default function Dashboard() {
             <motion.div
               key={i}
               whileHover={{ y: -6 }}
-              className="relative overflow-hidden rounded-2xl surface border border-[color:var(--border)]/60 backdrop-blur-xl shadow-lg"
+              className="relative overflow-hidden rounded-2xl surface border-default backdrop-blur-xl shadow-lg"
             >
               <div className="relative p-6 flex items-center gap-4">
-                {/* ICON COLORS KEPT STATIC */}
+                {/* ICON COLORS KEPT STATIC AS PER DESIGN RULES */}
                 <div
                   className={`p-4 rounded-xl bg-gradient-to-br ${s.gradient} text-white shadow-lg`}
                 >
@@ -158,7 +158,7 @@ export default function Dashboard() {
       {/* Charts + Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pie Chart */}
-        <div className="rounded-2xl surface border border-[color:var(--border)] p-6 shadow-lg">
+        <div className="surface-card p-6">
           <h3 className="text-lg font-semibold text-primary mb-4">
             Asset Status Distribution
           </h3>
@@ -185,7 +185,7 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className="rounded-2xl surface border border-[color:var(--border)] p-6 shadow-lg">
+        <div className="surface-card p-6">
           <h3 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
             <History size={18} />
             Recent Activity
@@ -200,7 +200,7 @@ export default function Dashboard() {
               paginatedHistory.map((h) => (
                 <div
                   key={h.id}
-                  className="p-3 rounded-xl surface-muted border border-[color:var(--border)]"
+                  className="p-3 rounded-xl surface-muted border-default"
                 >
                   <p className="text-sm text-primary">
                     {h.description}
@@ -219,7 +219,12 @@ export default function Dashboard() {
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((p) => p - 1)}
-                className="px-3 py-1 rounded-lg text-sm surface-muted border border-[color:var(--border)] disabled:opacity-40"
+                className={`
+                  px-3 py-1 rounded-lg text-sm
+                  surface-muted border-default
+                  hover:surface transition-colors
+                  disabled:opacity-40 disabled:cursor-not-allowed
+                `}
               >
                 Previous
               </button>
@@ -231,7 +236,12 @@ export default function Dashboard() {
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((p) => p + 1)}
-                className="px-3 py-1 rounded-lg text-sm surface-muted border border-[color:var(--border)] disabled:opacity-40"
+                className={`
+                  px-3 py-1 rounded-lg text-sm
+                  surface-muted border-default
+                  hover:surface transition-colors
+                  disabled:opacity-40 disabled:cursor-not-allowed
+                `}
               >
                 Next
               </button>

@@ -2,7 +2,8 @@
 
 "use client";
 import { useEffect, useState } from "react";
-import { Clock, CheckCircle, XCircle } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Search, ArrowRightLeft } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function AssetTransferHistory() {
   const [transfers, setTransfers] = useState([]);
@@ -34,16 +35,19 @@ export default function AssetTransferHistory() {
     fetchTransfers();
   }, []);
 
-  const statusColors = {
-    Approved: "text-green-400",
-    Pending: "text-yellow-400",
-    Rejected: "text-red-400",
-  };
-
-  const statusIcons = {
-    Approved: <CheckCircle size={16} className="inline mr-1" />,
-    Pending: <Clock size={16} className="inline mr-1" />,
-    Rejected: <XCircle size={16} className="inline mr-1" />,
+  const statusConfig = {
+    Approved: {
+      color: "accent",
+      icon: CheckCircle,
+    },
+    Pending: {
+      color: "text-warning",
+      icon: Clock,
+    },
+    Rejected: {
+      color: "text-danger",
+      icon: XCircle,
+    },
   };
 
   const filtered = transfers.filter(
@@ -54,62 +58,130 @@ export default function AssetTransferHistory() {
   );
 
   return (
-    <div className="p-6 bg-black min-h-screen text-white">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-6"
+    >
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Asset Transfer History</h2>
-        <input
-          type="text"
-          placeholder="Search transfers..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="px-4 py-2 rounded-lg bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500"
-        />
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-primary flex items-center gap-2">
+            <ArrowRightLeft className="accent" size={28} />
+            Asset Transfer History
+          </h2>
+          <p className="text-sm text-secondary mt-1">
+            Complete record of all asset transfers between employees
+          </p>
+        </div>
+
+        {/* Search */}
+        <div className="relative w-full md:w-72">
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary"
+          />
+          <input
+            type="text"
+            placeholder="Search transfers..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className={`
+              w-full pl-9 pr-4 py-2.5 rounded-xl
+              surface border-default
+              text-sm text-primary placeholder:text-secondary
+              focus:outline-none focus:ring-2 focus:ring-accent-soft
+              transition-shadow
+            `}
+          />
+        </div>
       </div>
 
-      {loading ? (
-        <p>Loading transfers...</p>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-700">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-gray-800 text-gray-300 uppercase text-xs">
+      {/* Table */}
+      <div className="overflow-x-auto surface-card">
+        {loading ? (
+          <div className="p-10 text-center text-secondary">
+            Loading transfers...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="p-10 text-center text-secondary">
+            No transfers found
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="surface-muted text-secondary text-xs uppercase">
               <tr>
-                <th className="px-6 py-3">Asset Code</th>
-                <th className="px-6 py-3">Make/Model</th>
-                <th className="px-6 py-3">Serial No</th>
-                <th className="px-6 py-3">From</th>
-                <th className="px-6 py-3">To</th>
-                <th className="px-6 py-3">Date</th>
-                <th className="px-6 py-3">Status</th>
+                <th className="px-6 py-4 text-left">Asset Code</th>
+                <th className="px-6 py-4 text-left">Make/Model</th>
+                <th className="px-6 py-4 text-left">Serial No</th>
+                <th className="px-6 py-4 text-left">From</th>
+                <th className="px-6 py-4 text-left">To</th>
+                <th className="px-6 py-4 text-left">Date</th>
+                <th className="px-6 py-4 text-left">Status</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((t, i) => (
-                <tr
-                  key={i}
-                  className="border-b border-gray-700 hover:bg-gray-800 transition-all"
-                >
-                  <td className="px-6 py-3">{t.asset_code}</td>
-                  <td className="px-6 py-3">
-                    {t.make} {t.model}
-                  </td>
-                  <td className="px-6 py-3">{t.serial_no}</td>
-                  <td className="px-6 py-3">{t.from_emp_code}</td>
-                  <td className="px-6 py-3">{t.to_emp_code}</td>
-                  <td className="px-6 py-3">
-                    {new Date(t.transfer_date).toLocaleDateString()}
-                  </td>
-                  <td
-                    className={`px-6 py-3 font-semibold ${statusColors[t.status]}`}
+              {filtered.map((t, i) => {
+                const config = statusConfig[t.status] || statusConfig.Pending;
+                const StatusIcon = config.icon;
+                
+                return (
+                  <tr
+                    key={i}
+                    className="border-t border-default hover:accent-bg transition-colors"
                   >
-                    {statusIcons[t.status]} {t.status}
-                  </td>
-                </tr>
-              ))}
+                    <td className="px-6 py-4 font-medium text-primary">
+                      {t.asset_code}
+                    </td>
+                    <td className="px-6 py-4 text-primary">
+                      {t.make} {t.model}
+                    </td>
+                    <td className="px-6 py-4 text-primary">{t.serial_no}</td>
+                    <td className="px-6 py-4 text-primary">{t.from_emp_code}</td>
+                    <td className="px-6 py-4 text-primary">{t.to_emp_code}</td>
+                    <td className="px-6 py-4 text-primary">
+                      {new Date(t.transfer_date).toLocaleDateString()}
+                    </td>
+                    <td className={`px-6 py-4 font-semibold ${config.color}`}>
+                      <span className="flex items-center gap-1.5">
+                        <StatusIcon size={16} />
+                        {t.status}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+        )}
+      </div>
+
+      {/* Footer Stats */}
+      {!loading && filtered.length > 0 && (
+        <div className="surface-card p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-2xl font-bold accent">
+                {filtered.filter((t) => t.status === "Approved").length}
+              </p>
+              <p className="text-xs text-secondary uppercase">Approved</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-warning">
+                {filtered.filter((t) => t.status === "Pending").length}
+              </p>
+              <p className="text-xs text-secondary uppercase">Pending</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-danger">
+                {filtered.filter((t) => t.status === "Rejected").length}
+              </p>
+              <p className="text-xs text-secondary uppercase">Rejected</p>
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

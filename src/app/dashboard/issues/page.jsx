@@ -1,5 +1,7 @@
 // src/app/dashboard/issues/page.jsx
 
+// src/app/dashboard/issues/page.jsx
+
 "use client";
 import { useEffect, useState } from "react";
 import { Eye, Edit, Search, ArrowRight } from "lucide-react";
@@ -52,8 +54,8 @@ export default function AssetIssuesList() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-white">Issued Assets</h2>
-          <p className="text-sm text-gray-400">
+          <h2 className="text-3xl font-bold text-primary">Issued Assets</h2>
+          <p className="text-sm text-secondary">
             Assets currently assigned to employees
           </p>
         </div>
@@ -62,34 +64,37 @@ export default function AssetIssuesList() {
         <div className="relative w-full md:w-72">
           <Search
             size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary"
           />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search employee, asset, serial..."
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl
-                       bg-gray-900 border border-gray-700
-                       text-sm text-white placeholder-gray-500
-                       focus:outline-none focus:ring-2 focus:ring-green-500/40"
+            className={`
+              w-full pl-9 pr-4 py-2.5 rounded-xl
+              surface border-default
+              text-sm text-primary placeholder:text-secondary
+              focus:outline-none focus:ring-2 focus:ring-accent-soft
+              transition-shadow
+            `}
           />
         </div>
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto bg-gray-900/70 backdrop-blur-xl border border-gray-700 rounded-2xl shadow-xl">
+      <div className="overflow-x-auto surface-card backdrop-blur-xl">
         {loading ? (
-          <div className="p-10 text-center text-gray-400">
+          <div className="p-10 text-center text-secondary">
             Loading issued assets…
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-10 text-center text-gray-400">
+          <div className="p-10 text-center text-secondary">
             No issued assets found
           </div>
         ) : (
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-800 text-gray-300 text-xs uppercase">
+            <thead className="surface-muted text-secondary text-xs uppercase">
               <tr>
                 <th className="px-6 py-4 text-left">Employee</th>
                 <th className="px-6 py-4">Emp Code</th>
@@ -106,28 +111,33 @@ export default function AssetIssuesList() {
               {filtered.map((issue) => (
                 <tr
                   key={issue.id}
-                  className="border-t border-gray-800 hover:bg-green-500/5 transition-colors"
+                  className="border-t border-default hover:accent-bg transition-colors"
                 >
-                  <td className="px-6 py-4 font-medium text-white">
+                  <td className="px-6 py-4 font-medium text-primary">
                     {issue.employee_name}
                   </td>
-                  <td className="px-6 py-4">{issue.emp_code}</td>
-                  <td className="px-6 py-4">{issue.department}</td>
-                  <td className="px-6 py-4">{issue.asset_code}</td>
-                  <td className="px-6 py-4">{issue.make_model}</td>
-                  <td className="px-6 py-4">{issue.serial_no}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-primary">{issue.emp_code}</td>
+                  <td className="px-6 py-4 text-primary">{issue.department}</td>
+                  <td className="px-6 py-4 text-primary">{issue.asset_code}</td>
+                  <td className="px-6 py-4 text-primary">{issue.make_model}</td>
+                  <td className="px-6 py-4 text-primary">{issue.serial_no}</td>
+                  <td className="px-6 py-4 text-primary">
                     {new Date(issue.created_at).toLocaleDateString()}
                   </td>
 
                   {/* Actions */}
                   <td className="px-6 py-4">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex justify-end gap-2 flex-wrap">
                       <button
                         onClick={() => window.open(`/api/issues/${issue.id}/form`, "_blank")}
-                        className="px-4 py-2 rounded-lg bg-indigo-600 text-white"
+                        className={`
+                          px-3 py-2 rounded-lg text-xs font-medium
+                          surface-muted border-default
+                          text-primary hover:surface
+                          transition-all shadow-sm
+                        `}
                       >
-                        Generate Issue Form (PDF)
+                        Generate PDF
                       </button>
 
                       {/* View */}
@@ -137,9 +147,13 @@ export default function AssetIssuesList() {
                             `/dashboard/issues/${issue.id}?mode=view`
                           )
                         }
-                        className="flex items-center gap-1.5 px-3 py-1.5
-                                   rounded-lg bg-blue-600/90 hover:bg-blue-600
-                                   text-white text-xs transition"
+                        className={`
+                          flex items-center gap-1.5 px-3 py-2
+                          rounded-lg text-xs font-medium
+                          surface-muted border-default
+                          text-primary hover:surface
+                          transition-all shadow-sm
+                        `}
                       >
                         <Eye size={14} />
                         View
@@ -152,9 +166,12 @@ export default function AssetIssuesList() {
                             `/dashboard/issues/${issue.id}?mode=edit`
                           )
                         }
-                        className="flex items-center gap-1.5 px-3 py-1.5
-                                   rounded-lg bg-green-600/90 hover:bg-green-600
-                                   text-white text-xs transition"
+                        className={`
+                          flex items-center gap-1.5 px-3 py-2
+                          rounded-lg text-xs font-semibold
+                          gradient-accent text-white
+                          hover:opacity-90 transition-all shadow-md
+                        `}
                       >
                         <Edit size={14} />
                         Edit
@@ -170,7 +187,7 @@ export default function AssetIssuesList() {
 
       {/* Footer hint */}
       {!loading && filtered.length > 0 && (
-        <div className="text-xs text-gray-500 flex items-center gap-1">
+        <div className="text-xs text-secondary flex items-center gap-1">
           Click <ArrowRight size={12} /> View or Edit to manage issue details
         </div>
       )}

@@ -11,10 +11,8 @@ export default function IssueDetailPage() {
   const router = useRouter();
   const { id } = useParams();
   const search = useSearchParams();
-
   const mode = search.get("mode") || "view";
   const isEdit = mode === "edit";
-
   const [issue, setIssue] = useState(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -25,13 +23,11 @@ export default function IssueDetailPage() {
       const res = await fetch(`/api/issues/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       if (!res.ok) return;
       const data = await res.json();
       setIssue(data);
       setLoading(false);
     };
-
     fetchIssue();
   }, [id]);
 
@@ -71,7 +67,6 @@ export default function IssueDetailPage() {
           physical_condition: issue.physical_condition,
         }),
       });
-
       if (res.ok) {
         router.replace(`/dashboard/issues/${id}?mode=view`);
       }
@@ -82,7 +77,7 @@ export default function IssueDetailPage() {
     }
   };
 
-  if (loading) return <div className="text-gray-400">Loading issue…</div>;
+  if (loading) return <div className="text-secondary">Loading issue…</div>;
 
   return (
     <motion.div
@@ -94,29 +89,36 @@ export default function IssueDetailPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold text-white flex items-center gap-2">
-            <FileText className="text-green-400" />
+          <h2 className="text-3xl font-bold text-primary flex items-center gap-2">
+            <FileText className="accent" />
             Issue {isEdit ? "Edit" : "Details"}
           </h2>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-secondary">
             Asset Code: {issue.asset_code}
           </p>
         </div>
-
         <div className="flex gap-2">
           <button
             onClick={() => router.push("/dashboard/issues")}
-            className="px-4 py-2 rounded-xl bg-gray-800 border border-gray-700 hover:bg-gray-700 flex items-center gap-2"
+            className={`
+              px-4 py-2 rounded-xl surface border-default
+              hover:surface-muted transition-colors
+              flex items-center gap-2
+            `}
           >
             <ArrowLeft size={16} /> Back
           </button>
-
           {!isEdit && (
             <button
               onClick={() =>
                 router.push(`/dashboard/issues/${id}?mode=edit`)
               }
-              className="px-4 py-2 rounded-xl bg-green-600 hover:bg-green-700 flex items-center gap-2"
+              className={`
+                px-4 py-2 rounded-xl font-semibold
+                gradient-accent text-white
+                hover:opacity-90 transition-opacity
+                flex items-center gap-2
+              `}
             >
               <Edit size={16} /> Edit
             </button>
@@ -127,14 +129,54 @@ export default function IssueDetailPage() {
       {/* Employee Info (Editable) */}
       <Section title="Employee Information">
         <Grid>
-          <FormInput label="Employee Name" value={issue.employee_name} readOnly={!isEdit} onChange={(e)=>onChange("employee_name", e.target.value)} />
-          <FormInput label="Employee Code" value={issue.emp_code} readOnly={!isEdit} onChange={(e)=>onChange("emp_code", e.target.value)} />
-          <FormInput label="Department" value={issue.department} readOnly={!isEdit} onChange={(e)=>onChange("department", e.target.value)} />
-          <FormInput label="Division" value={issue.division} readOnly={!isEdit} onChange={(e)=>onChange("division", e.target.value)} />
-          <FormInput label="Designation" value={issue.designation} readOnly={!isEdit} onChange={(e)=>onChange("designation", e.target.value)} />
-          <FormInput label="Location" value={issue.location} readOnly={!isEdit} onChange={(e)=>onChange("location", e.target.value)} />
-          <FormInput label="Phone" value={issue.phone} readOnly={!isEdit} onChange={(e)=>onChange("phone", e.target.value)} />
-          <FormInput label="Email" value={issue.email} readOnly={!isEdit} onChange={(e)=>onChange("email", e.target.value)} />
+          <FormInput 
+            label="Employee Name" 
+            value={issue.employee_name} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("employee_name", e.target.value)} 
+          />
+          <FormInput 
+            label="Employee Code" 
+            value={issue.emp_code} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("emp_code", e.target.value)} 
+          />
+          <FormInput 
+            label="Department" 
+            value={issue.department} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("department", e.target.value)} 
+          />
+          <FormInput 
+            label="Division" 
+            value={issue.division} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("division", e.target.value)} 
+          />
+          <FormInput 
+            label="Designation" 
+            value={issue.designation} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("designation", e.target.value)} 
+          />
+          <FormInput 
+            label="Location" 
+            value={issue.location} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("location", e.target.value)} 
+          />
+          <FormInput 
+            label="Phone" 
+            value={issue.phone} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("phone", e.target.value)} 
+          />
+          <FormInput 
+            label="Email" 
+            value={issue.email} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("email", e.target.value)} 
+          />
         </Grid>
       </Section>
 
@@ -150,19 +192,59 @@ export default function IssueDetailPage() {
       {/* Technical */}
       <Section title="Technical / Remarks">
         <Grid>
-          <FormInput label="IP Address" value={issue.ip_address} readOnly={!isEdit} onChange={(e)=>onChange("ip_address", e.target.value)} />
-          <FormInput label="OS / Software" value={issue.os_software} readOnly={!isEdit} onChange={(e)=>onChange("os_software", e.target.value)} />
-          <FormInput label="Hostname" value={issue.hostname} readOnly={!isEdit} onChange={(e)=>onChange("hostname", e.target.value)} />
-          <FormInput label="Remarks" value={issue.remarks} readOnly={!isEdit} onChange={(e)=>onChange("remarks", e.target.value)} />
+          <FormInput 
+            label="IP Address" 
+            value={issue.ip_address} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("ip_address", e.target.value)} 
+          />
+          <FormInput 
+            label="OS / Software" 
+            value={issue.os_software} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("os_software", e.target.value)} 
+          />
+          <FormInput 
+            label="Hostname" 
+            value={issue.hostname} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("hostname", e.target.value)} 
+          />
+          <FormInput 
+            label="Remarks" 
+            value={issue.remarks} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("remarks", e.target.value)} 
+          />
         </Grid>
       </Section>
 
       <Section title="OS & Software Configuration">
         <Grid>
-          <FormInput label="OS Name" value={issue.os_name} readOnly={!isEdit} onChange={(e)=>onChange("os_name", e.target.value)} />
-          <FormInput label="OS Version" value={issue.os_version} readOnly={!isEdit} onChange={(e)=>onChange("os_version", e.target.value)} />
-          <FormInput label="Office Version" value={issue.office_version} readOnly={!isEdit} onChange={(e)=>onChange("office_version", e.target.value)} />
-          <FormInput label="Antivirus" value={issue.antivirus} readOnly={!isEdit} onChange={(e)=>onChange("antivirus", e.target.value)} />
+          <FormInput 
+            label="OS Name" 
+            value={issue.os_name} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("os_name", e.target.value)} 
+          />
+          <FormInput 
+            label="OS Version" 
+            value={issue.os_version} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("os_version", e.target.value)} 
+          />
+          <FormInput 
+            label="Office Version" 
+            value={issue.office_version} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("office_version", e.target.value)} 
+          />
+          <FormInput 
+            label="Antivirus" 
+            value={issue.antivirus} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("antivirus", e.target.value)} 
+          />
           <FormInput label="Windows Update" value={issue.windows_update} readOnly />
           <FormInput label="Local Admin Removed" value={issue.local_admin_removed} readOnly />
           <FormInput label="Printer Configured" value={issue.printer_configured} readOnly />
@@ -172,11 +254,20 @@ export default function IssueDetailPage() {
           <FormInput label="Chrome" value={issue.chrome} readOnly />
           <FormInput label="OneDrive" value={issue.onedrive} readOnly />
           <FormInput label="Laptop Bag" value={issue.laptop_bag} readOnly />
-          <FormInput label="RMM Agent" value={issue.rmm_agent} readOnly={!isEdit} onChange={(e)=>onChange("rmm_agent", e.target.value)} />
-          <FormInput label="Physical Condition" value={issue.physical_condition} readOnly={!isEdit} onChange={(e)=>onChange("physical_condition", e.target.value)} />
+          <FormInput 
+            label="RMM Agent" 
+            value={issue.rmm_agent} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("rmm_agent", e.target.value)} 
+          />
+          <FormInput 
+            label="Physical Condition" 
+            value={issue.physical_condition} 
+            readOnly={!isEdit} 
+            onChange={(e)=>onChange("physical_condition", e.target.value)} 
+          />
         </Grid>
       </Section>
-
 
       {/* Save Bar */}
       {isEdit && (
@@ -184,7 +275,13 @@ export default function IssueDetailPage() {
           <button
             onClick={onSave}
             disabled={saving}
-            className="px-6 py-3 bg-green-600 hover:bg-green-700 rounded-xl font-semibold flex items-center gap-2 shadow-lg disabled:opacity-50"
+            className={`
+              px-6 py-3 rounded-xl font-semibold shadow-lg
+              gradient-accent text-white
+              hover:opacity-90 transition-opacity
+              flex items-center gap-2
+              disabled:opacity-50 disabled:cursor-not-allowed
+            `}
           >
             <Save size={16} />
             {saving ? "Saving…" : "Save Changes"}
@@ -198,8 +295,8 @@ export default function IssueDetailPage() {
 /* Helpers */
 function Section({ title, children }) {
   return (
-    <section className="bg-gray-900/70 border border-gray-700 rounded-2xl p-6">
-      <h3 className="text-lg font-semibold text-green-400 mb-4">
+    <section className="surface-card p-6">
+      <h3 className="text-lg font-semibold accent mb-4">
         {title}
       </h3>
       {children}

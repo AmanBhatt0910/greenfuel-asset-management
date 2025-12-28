@@ -5,7 +5,7 @@ import ReturnClient from "./ReturnClient";
 
 export default function ReturnPage() {
   return (
-    <Suspense fallback={<p className="text-gray-400">Loading return page…</p>}>
+    <Suspense fallback={<p className="text-secondary">Loading return page…</p>}>
       <ReturnClient />
     </Suspense>
   );

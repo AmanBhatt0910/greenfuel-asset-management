@@ -17,8 +17,8 @@ const Field = React.memo(
     required,
   }) => (
     <div className="space-y-1">
-      <label htmlFor={name} className="text-xs text-gray-400">
-        {label} {required && <span className="text-green-400">*</span>}
+      <label htmlFor={name} className="text-xs text-secondary">
+        {label} {required && <span className="accent">*</span>}
       </label>
       <input
         id={name}
@@ -27,9 +27,9 @@ const Field = React.memo(
         value={value ?? ""}
         onChange={onChange}
         placeholder={placeholder}
-        className="w-full px-4 py-2 rounded-xl bg-gray-800/80 border border-gray-700
-                   text-sm text-white placeholder-gray-500
-                   focus:outline-none focus:ring-2 focus:ring-green-500/40
+        className="w-full px-4 py-2 rounded-xl surface border border-default
+                   text-sm text-primary placeholder:text-secondary
+                   focus:outline-none focus:ring-2 focus:ring-[color:var(--accent-soft)]
                    transition-all"
       />
     </div>
@@ -60,7 +60,6 @@ export default function NewAssetPage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState({ type: "", text: "" });
 
-  /* ---------- Required fields ---------- */
   const requiredFields = [
     "asset_code",
     "make",
@@ -75,7 +74,6 @@ export default function NewAssetPage() {
     "warranty_end",
   ];
 
-  /* ---------- Validation ---------- */
   const isFormValid = useMemo(() => {
     return requiredFields.every(
       (key) => String(form[key]).trim() !== ""
@@ -155,16 +153,18 @@ export default function NewAssetPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-white">Register New Asset</h2>
-          <p className="text-gray-400 text-sm">
+          <h2 className="text-3xl font-bold text-primary">
+            Register New Asset
+          </h2>
+          <p className="text-secondary text-sm">
             Add a new asset to the inventory
           </p>
         </div>
 
         <button
           onClick={() => router.push("/dashboard/assets")}
-          className="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700
-                     flex items-center gap-2"
+          className="px-4 py-2 rounded-xl surface-muted border border-default
+                     flex items-center gap-2 text-secondary"
         >
           <ArrowLeft size={16} /> Back to Inventory
         </button>
@@ -173,8 +173,8 @@ export default function NewAssetPage() {
       {/* Form */}
       <form onSubmit={onSubmit} className="space-y-6">
         {/* Basic Info */}
-        <section className="bg-gray-900/70 border border-gray-700 rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">
+        <section className="surface border border-default rounded-2xl p-6">
+          <h3 className="text-lg font-semibold text-primary mb-4">
             Basic Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -186,8 +186,8 @@ export default function NewAssetPage() {
         </section>
 
         {/* Purchase Info */}
-        <section className="bg-gray-900/70 border border-gray-700 rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">
+        <section className="surface border border-default rounded-2xl p-6">
+          <h3 className="text-lg font-semibold text-primary mb-4">
             Purchase Details
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -200,8 +200,8 @@ export default function NewAssetPage() {
         </section>
 
         {/* Warranty */}
-        <section className="bg-gray-900/70 border border-gray-700 rounded-2xl p-6">
-          <h3 className="text-lg font-semibold text-white mb-4">
+        <section className="surface border border-default rounded-2xl p-6">
+          <h3 className="text-lg font-semibold text-primary mb-4">
             Warranty Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -216,8 +216,8 @@ export default function NewAssetPage() {
           <div
             className={`text-sm px-4 py-2 rounded-xl border ${
               msg.type === "success"
-                ? "bg-green-600/10 text-green-300 border-green-700"
-                : "bg-red-600/10 text-red-300 border-red-700"
+                ? "accent-bg accent border-default"
+                : "surface-muted text-danger border-default"
             }`}
           >
             {msg.text}
@@ -231,7 +231,7 @@ export default function NewAssetPage() {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={saving || !isFormValid}
-            className="px-6 py-3 rounded-xl bg-green-600 hover:bg-green-700
+            className="px-6 py-3 rounded-xl accent-strong text-primary
                        font-semibold flex items-center gap-2 shadow-lg
                        disabled:opacity-50"
           >
