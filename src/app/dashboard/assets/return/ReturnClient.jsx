@@ -7,22 +7,28 @@ import { useState } from "react";
 
 export default function ReturnClient() {
   const params = useSearchParams();
-  const assetCode = params.get("asset");
+  const issueId = params.get("issue");
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const handleReturn = async () => {
+    if (!issueId) return alert("Invalid issue reference");
+
     setLoading(true);
     const token = localStorage.getItem("token");
 
-    await fetch(`api/assets/${asset.id}/return`, {
+    const res = await fetch(`/api/issues/${issueId}/return`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ asset_code: assetCode }),
     });
+
+    if (!res.ok) {
+      alert("Failed to return asset");
+      setLoading(false);
+      return;
+    }
 
     router.push("/dashboard/assets");
   };
@@ -33,7 +39,7 @@ export default function ReturnClient() {
         Return Asset
       </h2>
       <p className="text-gray-400 mb-4">
-        Asset <b>{assetCode}</b> will be moved back to inventory.
+        This asset will be moved back to inventory.
       </p>
 
       <button

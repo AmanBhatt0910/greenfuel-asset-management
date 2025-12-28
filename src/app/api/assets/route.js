@@ -4,16 +4,10 @@ import pool from "@/lib/db";
 import { verifyAuth } from "@/lib/auth";
 import { logHistory } from "@/lib/history";
 
-/* ============================
-   GET — Fetch assets
-============================ */
 export async function GET(req) {
   const auth = verifyAuth(req);
   if (!auth.ok) {
-    return new Response(
-      JSON.stringify({ message: auth.error }),
-      { status: 401 }
-    );
+    return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
   }
 
   try {
@@ -22,29 +16,33 @@ export async function GET(req) {
 
     let query = `
       SELECT
-        id,
-        asset_code,
-        make,
-        model,
-        serial_no,
-        po_no,
-        invoice_no,
-        invoice_date,
-        amount,
-        vendor,
-        warranty_years,
-        warranty_start,
-        warranty_end,
-        status,
-        created_at
-      FROM assets
+        a.id,
+        a.asset_code,
+        a.make,
+        a.model,
+        a.serial_no,
+        a.po_no,
+        a.invoice_no,
+        a.invoice_date,
+        a.amount,
+        a.vendor,
+        a.warranty_years,
+        a.warranty_start,
+        a.warranty_end,
+        a.status,
+        a.created_at,
+        i.id AS issue_id
+      FROM assets a
+      LEFT JOIN issues i
+        ON a.asset_code = i.asset_code
+        AND a.status = 'ISSUED'
     `;
 
     if (availableOnly) {
-      query += ` WHERE status = 'IN_STOCK'`;
+      query += ` WHERE a.status = 'IN_STOCK'`;
     }
 
-    query += ` ORDER BY created_at DESC`;
+    query += ` ORDER BY a.created_at DESC`;
 
     const [rows] = await pool.query(query);
     return new Response(JSON.stringify(rows), { status: 200 });
