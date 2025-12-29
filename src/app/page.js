@@ -8,7 +8,7 @@ import { Leaf, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 export default function LoginPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState("admin@greenfuelenergy.in");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -114,7 +114,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@greenfuel.com"
+                  placeholder="admin@greenfuelenergy.in"
                   className="w-full px-4 py-4 rounded-xl surface-muted border border-[color:var(--border)]/50 text-primary focus:ring-2 focus:ring-[color:var(--accent)]/50 focus:outline-none transition-all"
                   required
                 />
