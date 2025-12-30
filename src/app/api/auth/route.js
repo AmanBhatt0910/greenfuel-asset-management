@@ -50,23 +50,20 @@ export async function POST(req) {
       { expiresIn: "1d" }
     );
 
-
     const response = NextResponse.json(
       { message: "Login successful", success: true },
       { status: 200 }
     );
 
-    // Set cookie with explicit options
     response.cookies.set({
       name: "token",
       value: token,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false,
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24,
+      maxAge: 60 * 60 * 24, // 1 day
     });
-
 
     return response;
   } catch (err) {
