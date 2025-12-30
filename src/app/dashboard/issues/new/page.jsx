@@ -1,12 +1,136 @@
-// app/dashboard/issue/new/page.jsx
+// app/dashboard/issues/new/page.jsx
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, FileCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import FormInput from "@/components/FormInput";
 import FormSelectSearchable from "@/components/FormSelectSearchable";
 
+/* ============================
+   Reusable Components
+============================ */
+
+// Page Header Component
+const PageHeader = ({ title, subtitle, onBack }) => (
+  <div className="flex justify-between items-center">
+    <div>
+      <h2 className="text-3xl font-bold text-primary">{title}</h2>
+      <p className="text-sm text-secondary">{subtitle}</p>
+    </div>
+    <button
+      onClick={onBack}
+      className="px-4 py-2 rounded-xl surface border-default hover:surface-muted transition-colors flex items-center gap-2"
+    >
+      <ArrowLeft size={16} /> Back
+    </button>
+  </div>
+);
+
+// Form Section Component
+const FormSection = ({ title, children, note }) => (
+  <section className="surface-card p-6">
+    {title && <h3 className="text-lg font-semibold accent mb-4">{title}</h3>}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
+    {note && <p className="text-xs text-secondary mt-2">{note}</p>}
+  </section>
+);
+
+// Declaration Section Component
+const DeclarationSection = ({ onChange, checked }) => (
+  <section className="surface-card p-6">
+    <h3 className="text-lg font-semibold accent mb-3">Declaration</h3>
+    <p className="text-sm text-primary mb-4 leading-relaxed">
+      I acknowledge receipt of the IT assets and agree to use them strictly for
+      company purposes.
+    </p>
+    <label className="flex items-center gap-2 text-sm text-primary cursor-pointer">
+      <input
+        type="checkbox"
+        className="w-4 h-4 cursor-pointer"
+        checked={checked}
+        onChange={(e) => onChange("terms", e.target.checked ? "agreed" : "")}
+      />
+      I agree to the terms & conditions
+    </label>
+  </section>
+);
+
+// Submit Button Component
+const SubmitButton = ({ disabled, submitting }) => (
+  <div className="flex justify-end">
+    <button
+      type="submit"
+      disabled={disabled}
+      className={`
+        px-6 py-3 rounded-xl font-semibold 
+        flex items-center gap-2 shadow-lg
+        gradient-accent text-white
+        hover:opacity-90 transition-opacity
+        disabled:opacity-50 disabled:cursor-not-allowed
+      `}
+    >
+      <FileCheck size={18} />
+      {submitting ? "Submitting..." : "Issue Asset"}
+    </button>
+  </div>
+);
+
+/* ============================
+   Form Field Builder
+============================ */
+const FieldBuilder = ({ field, formData, handleChange, assets, selectedAssetCode, handleAssetChange }) => {
+  const commonProps = {
+    label: field.label,
+    value: formData[field.name] || field.defaultValue || "",
+    placeholder: field.placeholder,
+  };
+
+  // Special handling for asset selection
+  if (field.name === "asset_code") {
+    const assetOptions = assets.map((a) => ({
+      value: a.asset_code,
+      label: `${a.asset_code} - ${a.make} ${a.model} (${a.serial_no})`,
+    }));
+
+    return (
+      <FormSelectSearchable
+        {...commonProps}
+        options={assetOptions}
+        value={selectedAssetCode}
+        disabled={assets.length === 0}
+        onChange={(e) => handleAssetChange(e.target.value)}
+        searchPlaceholder="Type to search assets..."
+      />
+    );
+  }
+
+  // Select fields with options
+  if (field.type === "select" && field.options) {
+    return (
+      <FormSelectSearchable
+        {...commonProps}
+        options={field.options}
+        onChange={(e) => handleChange(field.name, e.target.value)}
+        searchPlaceholder={`Search ${field.label.toLowerCase()}...`}
+      />
+    );
+  }
+
+  // Regular input fields
+  return (
+    <FormInput
+      {...commonProps}
+      type={field.type || "text"}
+      readOnly={field.readOnly}
+      onChange={field.readOnly ? undefined : (e) => handleChange(field.name, e.target.value)}
+    />
+  );
+};
+
+/* ============================
+   Main Component
+============================ */
 export default function NewAssetIssueForm() {
   const router = useRouter();
   const [formId, setFormId] = useState("");
@@ -25,30 +149,43 @@ export default function NewAssetIssueForm() {
     setToday(now.toISOString().split("T")[0]);
 
     const fetchAssets = async () => {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/assets?available=true", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      const availableAssets = Array.isArray(data)
-        ? data.filter((a) => a.status === "IN_STOCK")
-        : [];
-      setAssets(availableAssets);
+      try {
+        const res = await fetch("/api/assets?available=true", {
+          credentials: "include",
+        });
+
+        if (res.status === 401) {
+          window.location.href = "/";
+          return;
+        }
+
+        const data = await res.json();
+        const availableAssets = Array.isArray(data)
+          ? data.filter((a) => a.status === "IN_STOCK")
+          : [];
+        setAssets(availableAssets);
+      } catch (err) {
+        console.error("Failed to fetch assets:", err);
+      }
     };
     fetchAssets();
   }, []);
 
-  const handleChange = (field, value) =>
+  const handleChange = useCallback((field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  }, []);
 
-  const handleAssetChange = (assetCode) => {
+  const handleAssetChange = useCallback((assetCode) => {
     setSelectedAssetCode(assetCode);
     const asset = assets.find((a) => a.asset_code === assetCode);
     setSelectedAsset(asset || null);
-    handleChange("asset_code", assetCode);
-    handleChange("make_model", asset ? `${asset.make} ${asset.model}` : "");
-    handleChange("serial_no", asset?.serial_no || "");
-  };
+    setFormData((prev) => ({
+      ...prev,
+      asset_code: assetCode,
+      make_model: asset ? `${asset.make} ${asset.model}` : "",
+      serial_no: asset?.serial_no || "",
+    }));
+  }, [assets]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,15 +203,18 @@ export default function NewAssetIssueForm() {
     }
     setSubmitting(true);
     try {
-      const token = localStorage.getItem("token");
       const res = await fetch("/api/issues", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(formData),
       });
+
+      if (res.status === 401) {
+        window.location.href = "/";
+        return;
+      }
+
       const result = await res.json();
       if (!res.ok) {
         throw new Error(result.message || "Failed to create issue");
@@ -87,11 +227,163 @@ export default function NewAssetIssueForm() {
     }
   };
 
-  // Create options with detailed labels for better searchability
-  const assetOptions = assets.map((a) => ({
-    value: a.asset_code,
-    label: `${a.asset_code} - ${a.make} ${a.model} (${a.serial_no})`,
-  }));
+  // Form sections configuration
+  const formSections = useMemo(() => [
+    {
+      title: null,
+      fields: [
+        { label: "Form Code", name: "form_id", readOnly: true, defaultValue: formId },
+        { label: "Date", name: "date", type: "date", readOnly: true, defaultValue: today },
+      ],
+    },
+    {
+      title: "Employee Information",
+      fields: [
+        { label: "Employee Name", name: "employee_name" },
+        { label: "Employee Code", name: "emp_code" },
+        { 
+          label: "Department", 
+          name: "department", 
+          type: "select",
+          options: ["IT", "HR", "Finance", "Operations", "Sales", "Admin"],
+          placeholder: "Select department...",
+        },
+        { 
+          label: "Division", 
+          name: "division", 
+          type: "select",
+          options: ["CNG", "BATTERY", "CORPORATE", "GUJARAT"],
+          placeholder: "Select division...",
+        },
+        { label: "Designation", name: "designation" },
+        { label: "Location", name: "location" },
+        { label: "Phone", name: "phone" },
+        { label: "Email", name: "email", type: "email" },
+      ],
+    },
+    {
+      title: "Asset Details",
+      fields: [
+        { 
+          label: "Asset Code", 
+          name: "asset_code",
+          placeholder: "Search by asset code, make, model, or serial...",
+        },
+        { label: "Make", name: "make", readOnly: true, defaultValue: selectedAsset?.make },
+        { label: "Model", name: "model", readOnly: true, defaultValue: selectedAsset?.model },
+        { label: "Serial No", name: "serial_no", readOnly: true, defaultValue: selectedAsset?.serial_no },
+        { label: "IP Address", name: "ip_address" },
+      ],
+    },
+    {
+      title: "System Configuration",
+      note: "Configuration details at the time of asset issue.",
+      fields: [
+        { 
+          label: "Operating System / Software", 
+          name: "os_software",
+          placeholder: "Windows 11, MS Office 2021, Antivirus",
+        },
+        { 
+          label: "Hostname", 
+          name: "hostname",
+          placeholder: "GF-LAP-023",
+        },
+      ],
+    },
+    {
+      title: "Operating Systems & Software Details",
+      fields: [
+        { label: "Operating System Name", name: "os_name", placeholder: "Windows" },
+        { label: "OS Version", name: "os_version", placeholder: "11 Pro" },
+        { label: "Microsoft Office Version", name: "office_version", placeholder: "Office 2021" },
+        { label: "Antivirus", name: "antivirus", placeholder: "Sophos" },
+        { 
+          label: "Windows Update", 
+          name: "windows_update", 
+          type: "select",
+          options: ["YES", "NO"],
+          defaultValue: "YES",
+          placeholder: "Select option...",
+        },
+        { 
+          label: "Local Admin Removed", 
+          name: "local_admin_removed", 
+          type: "select",
+          options: ["YES", "NO"],
+          defaultValue: "YES",
+          placeholder: "Select option...",
+        },
+        { 
+          label: "Printer Configured", 
+          name: "printer_configured", 
+          type: "select",
+          options: ["YES", "NO"],
+          defaultValue: "YES",
+          placeholder: "Select option...",
+        },
+        { 
+          label: "SAP Installed", 
+          name: "sap", 
+          type: "select",
+          options: ["YES", "NO"],
+          defaultValue: "NO",
+          placeholder: "Select option...",
+        },
+        { 
+          label: "Backup Configured", 
+          name: "backup_configured", 
+          type: "select",
+          options: ["YES", "NO"],
+          defaultValue: "NO",
+          placeholder: "Select option...",
+        },
+        { 
+          label: "7-Zip Installed", 
+          name: "zip_7", 
+          type: "select",
+          options: ["YES", "NO"],
+          defaultValue: "YES",
+          placeholder: "Select option...",
+        },
+        { 
+          label: "Chrome Installed", 
+          name: "chrome", 
+          type: "select",
+          options: ["YES", "NO"],
+          defaultValue: "YES",
+          placeholder: "Select option...",
+        },
+        { 
+          label: "OneDrive Configured", 
+          name: "onedrive", 
+          type: "select",
+          options: ["YES", "NO"],
+          defaultValue: "YES",
+          placeholder: "Select option...",
+        },
+        { 
+          label: "Laptop Bag Provided", 
+          name: "laptop_bag", 
+          type: "select",
+          options: ["YES", "NO"],
+          defaultValue: "YES",
+          placeholder: "Select option...",
+        },
+        { label: "RMM Agent", name: "rmm_agent", placeholder: "Kaseya / Intune" },
+        { label: "Physical Condition", name: "physical_condition", placeholder: "Good" },
+      ],
+    },
+  ], [formId, today, selectedAsset]);
+
+  const isFormValid = useMemo(() => {
+    return (
+      formData.asset_code &&
+      formData.employee_name &&
+      formData.emp_code &&
+      formData.terms === "agreed"
+    );
+  }, [formData]);
 
   return (
     <motion.div
@@ -100,295 +392,38 @@ export default function NewAssetIssueForm() {
       transition={{ duration: 0.3 }}
       className="space-y-8"
     >
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold text-primary">
-            Issue IT Asset
-          </h2>
-          <p className="text-sm text-secondary">
-            Asset Issue / Undertaking Form
-          </p>
-        </div>
-        <button
-          onClick={() => router.back()}
-          className={`
-            px-4 py-2 rounded-xl surface border-default 
-            hover:surface-muted transition-colors
-            flex items-center gap-2
-          `}
-        >
-          <ArrowLeft size={16} /> Back
-        </button>
-      </div>
+      <PageHeader
+        title="Issue IT Asset"
+        subtitle="Asset Issue / Undertaking Form"
+        onBack={() => router.back()}
+      />
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Meta */}
-        <section className="surface-card p-6 backdrop-blur-xl">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <FormInput label="Form Code" value={formId} readOnly />
-            <FormInput label="Date" type="date" value={today} readOnly />
-          </div>
-        </section>
+        {/* Dynamic Form Sections */}
+        {formSections.map((section, index) => (
+          <FormSection key={index} title={section.title} note={section.note}>
+            {section.fields.map((field) => (
+              <FieldBuilder
+                key={field.name}
+                field={field}
+                formData={formData}
+                handleChange={handleChange}
+                assets={assets}
+                selectedAssetCode={selectedAssetCode}
+                handleAssetChange={handleAssetChange}
+              />
+            ))}
+          </FormSection>
+        ))}
 
-        {/* Employee */}
-        <section className="surface-card p-6">
-          <h3 className="text-lg font-semibold accent mb-4">
-            Employee Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormInput
-              label="Employee Name"
-              value={formData.employee_name || ""}
-              onChange={(e) => handleChange("employee_name", e.target.value)}
-            />
-            <FormInput
-              label="Employee Code"
-              value={formData.emp_code || ""}
-              onChange={(e) => handleChange("emp_code", e.target.value)}
-            />
-            <FormSelectSearchable
-              label="Department"
-              value={formData.department || ""}
-              options={["IT","HR","Finance","Operations","Sales","Admin"]}
-              onChange={(e) => handleChange("department", e.target.value)}
-              placeholder="Select department..."
-              searchPlaceholder="Search departments..."
-            />
-            <FormSelectSearchable
-              label="Division"
-              value={formData.division || ""}
-              options={["CNG","BATTERY","CORPORATE","GUJARAT"]}
-              onChange={(e) => handleChange("division", e.target.value)}
-              placeholder="Select division..."
-              searchPlaceholder="Search divisions..."
-            />
-            <FormInput
-              label="Designation"
-              value={formData.designation || ""}
-              onChange={(e) => handleChange("designation", e.target.value)}
-            />
-            <FormInput
-              label="Location"
-              value={formData.location || ""}
-              onChange={(e) => handleChange("location", e.target.value)}
-            />
-            <FormInput
-              label="Phone"
-              value={formData.phone || ""}
-              onChange={(e) => handleChange("phone", e.target.value)}
-            />
-            <FormInput
-              label="Email"
-              type="email"
-              value={formData.email || ""}
-              onChange={(e) => handleChange("email", e.target.value)}
-            />
-          </div>
-        </section>
+        {/* Declaration */}
+        <DeclarationSection
+          onChange={handleChange}
+          checked={formData.terms === "agreed"}
+        />
 
-        {/* Asset */}
-        <section className="surface-card p-6">
-          <h3 className="text-lg font-semibold accent mb-4">
-            Asset Details
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormSelectSearchable
-              label="Asset Code"
-              options={assetOptions}
-              value={selectedAssetCode}
-              disabled={assets.length === 0}
-              onChange={(e) => handleAssetChange(e.target.value)}
-              placeholder="Search by asset code, make, model, or serial..."
-              searchPlaceholder="Type to search assets..."
-            />
-            <FormInput label="Make" value={selectedAsset?.make || ""} readOnly />
-            <FormInput label="Model" value={selectedAsset?.model || ""} readOnly />
-            <FormInput label="Serial No" value={selectedAsset?.serial_no || ""} readOnly />
-            <FormInput
-              label="IP Address"
-              value={formData.ip_address || ""}
-              onChange={(e) => handleChange("ip_address", e.target.value)}
-            />
-          </div>
-        </section>
-
-        {/* System Configuration */}
-        <section className="surface-card p-6">
-          <h3 className="text-lg font-semibold accent mb-4">
-            System Configuration
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormInput
-              label="Operating System / Software"
-              placeholder="Windows 11, MS Office 2021, Antivirus"
-              value={formData.os_software || ""}
-              onChange={(e) => handleChange("os_software", e.target.value)}
-            />
-            <FormInput
-              label="Hostname"
-              placeholder="GF-LAP-023"
-              value={formData.hostname || ""}
-              onChange={(e) => handleChange("hostname", e.target.value)}
-            />
-          </div>
-          <p className="text-xs text-secondary mt-2">
-            Configuration details at the time of asset issue.
-          </p>
-        </section>
-
-        {/* Policy */}
-        <section className="surface-card p-6">
-          <h3 className="text-lg font-semibold accent mb-3">
-            Declaration
-          </h3>
-          <p className="text-sm text-primary mb-4 leading-relaxed">
-            I acknowledge receipt of the IT assets and agree to use them strictly
-            for company purposes.
-          </p>
-          <label className="flex items-center gap-2 text-sm text-primary cursor-pointer">
-            <input
-              type="checkbox"
-              className="w-4 h-4 cursor-pointer"
-              onChange={(e) =>
-                handleChange("terms", e.target.checked ? "agreed" : "")
-              }
-            />
-            I agree to the terms & conditions
-          </label>
-        </section>
-
-        {/* OS & Software Details */}
-        <section className="surface-card p-6">
-          <h3 className="text-lg font-semibold accent mb-4">
-            Operating Systems & Software Details
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormInput
-              label="Operating System Name"
-              placeholder="Windows"
-              value={formData.os_name || ""}
-              onChange={(e) => handleChange("os_name", e.target.value)}
-            />
-            <FormInput
-              label="OS Version"
-              placeholder="11 Pro"
-              value={formData.os_version || ""}
-              onChange={(e) => handleChange("os_version", e.target.value)}
-            />
-            <FormInput
-              label="Microsoft Office Version"
-              placeholder="Office 2021"
-              value={formData.office_version || ""}
-              onChange={(e) => handleChange("office_version", e.target.value)}
-            />
-            <FormInput
-              label="Antivirus"
-              placeholder="Sophos"
-              value={formData.antivirus || ""}
-              onChange={(e) => handleChange("antivirus", e.target.value)}
-            />
-            <FormSelectSearchable
-              label="Windows Update"
-              options={["YES", "NO"]}
-              value={formData.windows_update || "YES"}
-              onChange={(e) => handleChange("windows_update", e.target.value)}
-              placeholder="Select option..."
-            />
-            <FormSelectSearchable
-              label="Local Admin Removed"
-              options={["YES", "NO"]}
-              value={formData.local_admin_removed || "YES"}
-              onChange={(e) => handleChange("local_admin_removed", e.target.value)}
-              placeholder="Select option..."
-            />
-            <FormSelectSearchable
-              label="Printer Configured"
-              options={["YES", "NO"]}
-              value={formData.printer_configured || "YES"}
-              onChange={(e) => handleChange("printer_configured", e.target.value)}
-              placeholder="Select option..."
-            />
-            <FormSelectSearchable
-              label="SAP Installed"
-              options={["YES", "NO"]}
-              value={formData.sap || "NO"}
-              onChange={(e) => handleChange("sap", e.target.value)}
-              placeholder="Select option..."
-            />
-            <FormSelectSearchable
-              label="Backup Configured"
-              options={["YES", "NO"]}
-              value={formData.backup_configured || "NO"}
-              onChange={(e) => handleChange("backup_configured", e.target.value)}
-              placeholder="Select option..."
-            />
-            <FormSelectSearchable
-              label="7-Zip Installed"
-              options={["YES", "NO"]}
-              value={formData.zip_7 || "YES"}
-              onChange={(e) => handleChange("zip_7", e.target.value)}
-              placeholder="Select option..."
-            />
-            <FormSelectSearchable
-              label="Chrome Installed"
-              options={["YES", "NO"]}
-              value={formData.chrome || "YES"}
-              onChange={(e) => handleChange("chrome", e.target.value)}
-              placeholder="Select option..."
-            />
-            <FormSelectSearchable
-              label="OneDrive Configured"
-              options={["YES", "NO"]}
-              value={formData.onedrive || "YES"}
-              onChange={(e) => handleChange("onedrive", e.target.value)}
-              placeholder="Select option..."
-            />
-            <FormSelectSearchable
-              label="Laptop Bag Provided"
-              options={["YES", "NO"]}
-              value={formData.laptop_bag || "YES"}
-              onChange={(e) => handleChange("laptop_bag", e.target.value)}
-              placeholder="Select option..."
-            />
-            <FormInput
-              label="RMM Agent"
-              placeholder="Kaseya / Intune"
-              value={formData.rmm_agent || ""}
-              onChange={(e) => handleChange("rmm_agent", e.target.value)}
-            />
-            <FormInput
-              label="Physical Condition"
-              placeholder="Good"
-              value={formData.physical_condition || ""}
-              onChange={(e) => handleChange("physical_condition", e.target.value)}
-            />
-          </div>
-        </section>
-
-        {/* CTA */}
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={
-              submitting ||
-              !formData.asset_code ||
-              !formData.employee_name ||
-              !formData.emp_code ||
-              formData.terms !== "agreed"
-            }
-            className={`
-              px-6 py-3 rounded-xl font-semibold 
-              flex items-center gap-2 shadow-lg
-              gradient-accent text-white
-              hover:opacity-90 transition-opacity
-              disabled:opacity-50 disabled:cursor-not-allowed
-            `}
-          >
-            <FileCheck size={18} />
-            {submitting ? "Submitting..." : "Issue Asset"}
-          </button>
-        </div>
+        {/* Submit */}
+        <SubmitButton disabled={submitting || !isFormValid} submitting={submitting} />
       </form>
     </motion.div>
   );

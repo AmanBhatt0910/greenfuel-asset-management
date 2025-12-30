@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🌿 Greenfuel Asset Management System
 
-## Getting Started
+A production-ready **Asset Management System** for **Greenfuel Energy**, built using **Next.js (App Router)**.
+The application is used internally to securely manage, issue, and track company assets.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🔐 Authentication
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+* Secure admin login
+* Admin email is **auto-filled** on the login screen:
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+  ```
+  admin@greenfuelenergy.in
+  ```
+* Access is restricted to authorized personnel only
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🧩 Core Modules
 
-To learn more about Next.js, take a look at the following resources:
+* **Login**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+  * Credential-based authentication
+  * Token stored locally after successful login
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+* **Dashboard**
 
-## Deploy on Vercel
+  * Central access point for asset operations
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+* **Asset Management**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+  * Asset creation and listing
+  * Asset issue and transfer
+  * Asset detail tracking (code, model, serial, vendor, etc.)
+
+---
+
+## 🎨 UI & UX
+
+* Responsive layout (desktop & mobile)
+* Custom gradient-based theme
+* Clean, distraction-free interface
+* Visual feedback for loading and errors
+
+---
+
+## 🚀 Deployment
+
+* Application is **deployed and live**
+* Built with **Next.js App Router**
+* Optimized for internal organizational use
+
+---
+
+## 🔒 Usage Notice
+
+This system is intended strictly for **internal use by Greenfuel Energy**.
+Unauthorized access or distribution is prohibited.
+
+---
+
+If you want, I can:
+
+* Tighten this further to **5–6 lines**
+* Rewrite it in a **formal enterprise tone**
+* Adapt it for **internal documentation or audit records**

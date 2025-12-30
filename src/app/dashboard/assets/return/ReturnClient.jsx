@@ -12,25 +12,36 @@ export default function ReturnClient() {
   const [loading, setLoading] = useState(false);
 
   const handleReturn = async () => {
-    if (!issueId) return alert("Invalid issue reference");
-
-    setLoading(true);
-    const token = localStorage.getItem("token");
-
-    const res = await fetch(`/api/issues/${issueId}/return`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!res.ok) {
-      alert("Failed to return asset");
-      setLoading(false);
+    if (!issueId) {
+      alert("Invalid issue reference");
       return;
     }
 
-    router.push("/dashboard/assets");
+    setLoading(true);
+
+    try {
+      const res = await fetch(`/api/issues/${issueId}/return`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (res.status === 401) {
+        window.location.href = "/";
+        return;
+      }
+
+      if (!res.ok) {
+        alert("Failed to return asset");
+        setLoading(false);
+        return;
+      }
+
+      router.push("/dashboard/assets");
+    } catch (err) {
+      console.error("Failed to return asset:", err);
+      alert("Failed to return asset");
+      setLoading(false);
+    }
   };
 
   return (

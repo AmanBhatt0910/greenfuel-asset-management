@@ -1,14 +1,17 @@
+// src/app/api/assets/[id]/history/route.js
+
 import pool from "@/lib/db";
 import { verifyAuth } from "@/lib/auth";
 
-export async function GET(req, { params }) {
+export async function GET(req, context) {
   const auth = verifyAuth(req);
   if (!auth.ok) {
     return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
   }
 
+  const params = await context.params;
+
   try {
-    /* 1️⃣ Get asset */
     const [[asset]] = await pool.query(
       `SELECT id, asset_code, make, model, serial_no, status
        FROM assets
@@ -25,7 +28,6 @@ export async function GET(req, { params }) {
 
     const timeline = [];
 
-    /* 2️⃣ ISSUES — source of truth for issuance */
     const [issues] = await pool.query(
       `SELECT
         employee_name,
@@ -52,7 +54,6 @@ export async function GET(req, { params }) {
       });
     });
 
-    /* 3️⃣ TRANSFERS */
     const [transfers] = await pool.query(
       `SELECT
         from_emp_code,
@@ -76,7 +77,6 @@ export async function GET(req, { params }) {
       });
     });
 
-    /* 4️⃣ SYSTEM HISTORY (exclude duplicate ISSUE logs) */
     const [systemHistory] = await pool.query(
       `SELECT
         event_type,
@@ -100,7 +100,6 @@ export async function GET(req, { params }) {
       });
     });
 
-    /* 5️⃣ Sort timeline (newest first) */
     timeline.sort(
       (a, b) => new Date(b.event_date) - new Date(a.event_date)
     );

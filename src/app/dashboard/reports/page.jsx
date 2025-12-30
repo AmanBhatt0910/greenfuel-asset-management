@@ -1,3 +1,5 @@
+// src/app/dashboard/reports/page.jsx
+
 "use client";
 
 import { FileText, Download } from "lucide-react";
@@ -10,28 +12,38 @@ export default function Reports() {
 
   const download = async () => {
     setLoading(true);
-    const token = localStorage.getItem("token");
 
-    const res = await fetch(`/api/reports?type=${type}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    try {
+      const res = await fetch(`/api/reports?type=${type}`, {
+        credentials: "include",
+      });
 
-    if (!res.ok) {
+      if (res.status === 401) {
+        window.location.href = "/";
+        return;
+      }
+
+      if (!res.ok) {
+        alert("Failed to generate report");
+        setLoading(false);
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${type}-report.csv`;
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download report:", err);
       alert("Failed to generate report");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${type}-report.csv`;
-    a.click();
-
-    window.URL.revokeObjectURL(url);
-    setLoading(false);
   };
 
   return (

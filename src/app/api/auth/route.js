@@ -1,11 +1,21 @@
 // src/app/api/auth/route.js
+
 import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { NextResponse } from "next/server";
 
 export async function POST(req) {
   try {
     const { email, password } = await req.json();
+
+    if (!process.env.JWT_SECRET) {
+      console.error("JWT_SECRET is not defined!");
+      return NextResponse.json(
+        { message: "Server configuration error" },
+        { status: 500 }
+      );
+    }
 
     const [rows] = await pool.query(
       "SELECT * FROM admins WHERE email = ?",
@@ -13,44 +23,56 @@ export async function POST(req) {
     );
 
     if (!rows.length) {
-      return new Response(
-        JSON.stringify({ message: "User not found" }),
+      return NextResponse.json(
+        { message: "User not found" },
         { status: 404 }
       );
     }
 
     const user = rows[0];
+
     const isValid = await bcrypt.compare(password, user.passwordHash);
 
     if (!isValid) {
-      return new Response(
-        JSON.stringify({ message: "Invalid password" }),
+      return NextResponse.json(
+        { message: "Invalid password" },
         { status: 401 }
       );
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role },
+      {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
-    return new Response(
-      JSON.stringify({
-        message: "Login successful",
-        token,
-      }),
-      {
-        status: 200,
-        headers: {
-          "Set-Cookie": `token=${token}; Path=/; HttpOnly; SameSite=Lax`,
-        },
-      }
+
+    const response = NextResponse.json(
+      { message: "Login successful", success: true },
+      { status: 200 }
     );
+
+    // Set cookie with explicit options
+    response.cookies.set({
+      name: "token",
+      value: token,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24,
+    });
+
+
+    return response;
   } catch (err) {
-    console.error(err);
-    return new Response(
-      JSON.stringify({ message: "Server error" }),
+    console.error("Auth error:", err);
+    return NextResponse.json(
+      { message: "Server error" },
       { status: 500 }
     );
   }

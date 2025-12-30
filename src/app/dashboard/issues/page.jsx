@@ -1,7 +1,5 @@
 // src/app/dashboard/issues/page.jsx
 
-// src/app/dashboard/issues/page.jsx
-
 "use client";
 import { useEffect, useState } from "react";
 import { Eye, Edit, Search, ArrowRight } from "lucide-react";
@@ -17,13 +15,14 @@ export default function AssetIssuesList() {
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        const token = localStorage.getItem("token");
         const res = await fetch("/api/issues", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          credentials: "include",
         });
+
+        if (res.status === 401) {
+          window.location.href = "/";
+          return;
+        }
 
         if (!res.ok) throw new Error("Failed to fetch issues");
         const data = await res.json();
@@ -43,6 +42,17 @@ export default function AssetIssuesList() {
       .toLowerCase()
       .includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[color:var(--accent)]/30 border-t-[color:var(--accent)] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-secondary">Loading issued assets…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -84,11 +94,7 @@ export default function AssetIssuesList() {
 
       {/* Table */}
       <div className="overflow-x-auto surface-card backdrop-blur-xl">
-        {loading ? (
-          <div className="p-10 text-center text-secondary">
-            Loading issued assets…
-          </div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="p-10 text-center text-secondary">
             No issued assets found
           </div>
@@ -186,7 +192,7 @@ export default function AssetIssuesList() {
       </div>
 
       {/* Footer hint */}
-      {!loading && filtered.length > 0 && (
+      {filtered.length > 0 && (
         <div className="text-xs text-secondary flex items-center gap-1">
           Click <ArrowRight size={12} /> View or Edit to manage issue details
         </div>

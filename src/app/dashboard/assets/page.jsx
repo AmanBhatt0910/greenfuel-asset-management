@@ -18,8 +18,10 @@ import {
 import { useRouter } from "next/navigation";
 
 /* ============================
-   Status Badge (token-based)
+   Reusable Components
 ============================ */
+
+// Status Badge Component
 const StatusBadge = ({ status }) => {
   const styles = {
     IN_STOCK: "accent-bg accent border-default",
@@ -28,11 +30,189 @@ const StatusBadge = ({ status }) => {
   };
 
   return (
-    <span
-      className={`px-2 py-0.5 rounded-md text-xs ${styles[status] || ""}`}
-    >
+    <span className={`px-2 py-0.5 rounded-md text-xs ${styles[status] || ""}`}>
       {status.replace("_", " ")}
     </span>
+  );
+};
+
+// Filter Button Component
+const FilterButton = ({ active, label, count, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`
+      px-4 py-1.5 rounded-full text-sm border transition-all
+      ${
+        active
+          ? "accent-bg accent border-default"
+          : "surface-muted text-secondary border-default hover:surface"
+      }
+    `}
+  >
+    {label}
+    <span className="ml-2 text-xs opacity-70">({count})</span>
+  </button>
+);
+
+// Action Button Component
+const ActionButton = ({ 
+  onClick, 
+  icon: Icon, 
+  label, 
+  variant = "default",
+  className = "" 
+}) => {
+  const variants = {
+    default: "surface border-default text-primary hover:surface-muted shadow-sm",
+    primary: "gradient-accent text-white hover:opacity-90 shadow-md",
+    info: "surface border-default text-info hover:surface-muted shadow-sm",
+    danger: "surface border-default text-danger hover:surface-muted shadow-sm",
+    warning: "surface border-default hover:surface-muted shadow-sm",
+    secondary: "surface border-default text-secondary hover:surface-muted shadow-sm",
+  };
+
+  const handleClick = (e) => {
+    e.stopPropagation();
+    onClick();
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      className={`
+        px-3 py-1.5 rounded-lg text-xs font-medium
+        flex items-center gap-1 transition-all
+        ${variants[variant]}
+        ${className}
+      `}
+      style={variant === "warning" ? { color: "var(--warning)" } : {}}
+    >
+      <Icon size={14} /> {label}
+    </button>
+  );
+};
+
+// Search Input Component
+const SearchInput = ({ value, onChange, placeholder }) => (
+  <div className="relative w-full lg:w-80">
+    <Search
+      size={16}
+      className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary"
+    />
+    <input
+      type="text"
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      className={`
+        w-full pl-9 pr-3 py-2 rounded-xl
+        surface border-default
+        text-sm text-primary placeholder:text-secondary
+        focus:outline-none focus:ring-2 focus:ring-accent-soft
+        transition-shadow
+      `}
+    />
+  </div>
+);
+
+// Pagination Select Component
+const ItemsPerPageSelect = ({ value, onChange, totalItems, startIndex, endIndex }) => (
+  <div className="flex items-center gap-2 text-sm text-secondary">
+    <span>Show</span>
+    <select
+      value={value}
+      onChange={onChange}
+      className="px-3 py-1.5 rounded-lg surface border-default text-primary focus:outline-none focus:ring-2 focus:ring-accent-soft"
+    >
+      <option value={5}>5</option>
+      <option value={10}>10</option>
+      <option value={25}>25</option>
+      <option value={50}>50</option>
+      <option value={100}>100</option>
+    </select>
+    <span>
+      per page • Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of {totalItems}
+    </span>
+  </div>
+);
+
+// Pagination Button Component
+const PaginationButton = ({ onClick, disabled, children, active = false }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className={`
+      ${active ? 'px-3 py-1.5' : 'p-2'} rounded-lg border-default transition-colors
+      ${
+        disabled
+          ? "surface-muted text-secondary cursor-not-allowed opacity-50"
+          : active
+          ? "accent-bg accent"
+          : "surface text-primary hover:surface-muted"
+      }
+      ${active ? 'text-sm font-medium' : ''}
+    `}
+  >
+    {children}
+  </button>
+);
+
+// Loading Spinner Component
+const LoadingSpinner = ({ message = "Loading..." }) => (
+  <div className="flex items-center justify-center py-20">
+    <div className="text-center">
+      <div className="w-12 h-12 border-4 border-[color:var(--accent)]/30 border-t-[color:var(--accent)] rounded-full animate-spin mx-auto mb-4" />
+      <p className="text-secondary">{message}</p>
+    </div>
+  </div>
+);
+
+// Table Header Component
+const TableHeader = ({ columns }) => (
+  <thead className="surface-muted text-secondary text-xs uppercase">
+    <tr>
+      {columns.map((col) => (
+        <th key={col} className="px-6 py-4 text-left">
+          {col}
+        </th>
+      ))}
+    </tr>
+  </thead>
+);
+
+// Table Row Component with isolated hover effect
+const TableRow = ({ row, getActions }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <tr
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`
+        border-t border-default text-primary
+        transition-colors duration-150
+        ${isHovered ? 'bg-[var(--surface-muted)]' : ''}
+      `}
+    >
+      <td className="px-6 py-4 font-medium">{row.asset_code}</td>
+      <td className="px-6 py-4">{row.make} {row.model}</td>
+      <td className="px-6 py-4">{row.serial_no}</td>
+      <td className="px-6 py-4">{row.vendor || "-"}</td>
+      <td className="px-6 py-4">
+        {row.warranty_years ? `${row.warranty_years} yrs` : "-"}
+      </td>
+      <td className="px-6 py-4">
+        <StatusBadge status={row.status} />
+      </td>
+      <td className="px-6 py-4">
+        <div className="flex flex-wrap gap-2">
+          {getActions(row).map((action, idx) => {
+            const ActionComp = action.component;
+            return <ActionComp key={idx} {...action.props} />;
+          })}
+        </div>
+      </td>
+    </tr>
   );
 };
 
@@ -51,10 +231,15 @@ export default function AssetsPage() {
   useEffect(() => {
     const run = async () => {
       try {
-        const token = localStorage.getItem("token");
         const res = await fetch("/api/assets", {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: "include",
         });
+
+        if (res.status === 401) {
+          window.location.href = "/";
+          return;
+        }
+
         const data = await res.json();
         setRows(Array.isArray(data) ? data : []);
         setState({ loading: false, error: "" });
@@ -65,14 +250,12 @@ export default function AssetsPage() {
     run();
   }, []);
 
-  const counts = useMemo(() => {
-    return {
-      ALL: rows.length,
-      IN_STOCK: rows.filter((r) => r.status === "IN_STOCK").length,
-      ISSUED: rows.filter((r) => r.status === "ISSUED").length,
-      GARBAGE: rows.filter((r) => r.status === "GARBAGE").length,
-    };
-  }, [rows]);
+  const counts = useMemo(() => ({
+    ALL: rows.length,
+    IN_STOCK: rows.filter((r) => r.status === "IN_STOCK").length,
+    ISSUED: rows.filter((r) => r.status === "ISSUED").length,
+    GARBAGE: rows.filter((r) => r.status === "GARBAGE").length,
+  }), [rows]);
 
   const filteredRows = useMemo(() => {
     let result = rows;
@@ -93,12 +276,10 @@ export default function AssetsPage() {
     return result;
   }, [rows, statusFilter, searchTerm]);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [statusFilter, searchTerm]);
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -108,7 +289,100 @@ export default function AssetsPage() {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
-  if (state.loading) return <p className="text-secondary">Loading assets…</p>;
+  // Action configurations based on status
+  const getActions = (row) => {
+    const actions = [
+      {
+        component: ActionButton,
+        props: {
+          onClick: () => router.push(`/dashboard/assets/${row.id}?mode=view`),
+          icon: Eye,
+          label: "View",
+          variant: "default",
+        },
+      },
+    ];
+
+    if (row.status !== "GARBAGE") {
+      actions.push({
+        component: ActionButton,
+        props: {
+          onClick: () => router.push(`/dashboard/assets/${row.id}?mode=edit`),
+          icon: Edit,
+          label: "Edit",
+          variant: "primary",
+        },
+      });
+    }
+
+    if (row.status === "IN_STOCK") {
+      actions.push(
+        {
+          component: ActionButton,
+          props: {
+            onClick: () => router.push(`/dashboard/issues/new?asset=${row.asset_code}`),
+            icon: UserPlus,
+            label: "Issue",
+            variant: "info",
+          },
+        },
+        {
+          component: ActionButton,
+          props: {
+            onClick: () => router.push(`/dashboard/garbage?asset=${row.asset_code}`),
+            icon: Trash2,
+            label: "Garbage",
+            variant: "danger",
+          },
+        }
+      );
+    }
+
+    if (row.status === "ISSUED") {
+      actions.push(
+        {
+          component: ActionButton,
+          props: {
+            onClick: () => router.push(`/dashboard/transfer/new?asset=${row.asset_code}`),
+            icon: ArrowRightLeft,
+            label: "Transfer",
+            variant: "warning",
+          },
+        },
+        {
+          component: ActionButton,
+          props: {
+            onClick: () => router.push(`/dashboard/assets/return?issue=${row.issue_id}`),
+            icon: RotateCcw,
+            label: "Return",
+            variant: "secondary",
+          },
+        }
+      );
+    }
+
+    return actions;
+  };
+
+  // Filter configuration
+  const filters = [
+    { key: "ALL", label: "All" },
+    { key: "IN_STOCK", label: "In Stock" },
+    { key: "ISSUED", label: "Issued" },
+    { key: "GARBAGE", label: "Garbage" },
+  ];
+
+  const tableColumns = [
+    "Asset Code",
+    "Make / Model",
+    "Serial No",
+    "Vendor",
+    "Warranty",
+    "Status",
+    "Actions",
+  ];
+
+  if (state.loading) return <LoadingSpinner message="Loading assets…" />;
   if (state.error) return <p className="text-danger">{state.error}</p>;
 
   return (
@@ -129,80 +403,34 @@ export default function AssetsPage() {
       {/* Filters */}
       <div className="flex flex-col lg:flex-row gap-4 lg:items-center lg:justify-between">
         <div className="flex flex-wrap gap-2">
-          {[
-            { key: "ALL", label: "All" },
-            { key: "IN_STOCK", label: "In Stock" },
-            { key: "ISSUED", label: "Issued" },
-            { key: "GARBAGE", label: "Garbage" },
-          ].map((f) => (
-            <button
+          {filters.map((f) => (
+            <FilterButton
               key={f.key}
+              active={statusFilter === f.key}
+              label={f.label}
+              count={counts[f.key]}
               onClick={() => setStatusFilter(f.key)}
-              className={`
-                px-4 py-1.5 rounded-full text-sm border transition-all
-                ${
-                  statusFilter === f.key
-                    ? "accent-bg accent border-default"
-                    : "surface-muted text-secondary border-default hover:surface"
-                }
-              `}
-            >
-              {f.label}
-              <span className="ml-2 text-xs opacity-70">
-                ({counts[f.key]})
-              </span>
-            </button>
+            />
           ))}
         </div>
 
-        {/* Search */}
-        <div className="relative w-full lg:w-80">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-secondary"
-          />
-          <input
-            type="text"
-            placeholder="Search by Asset Code or Serial No"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className={`
-              w-full pl-9 pr-3 py-2 rounded-xl
-              surface border-default
-              text-sm text-primary placeholder:text-secondary
-              focus:outline-none focus:ring-2 focus:ring-accent-soft
-              transition-shadow
-            `}
-          />
-        </div>
+        <SearchInput
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search by Asset Code or Serial No"
+        />
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto surface border-default rounded-2xl shadow-xl">
         <table className="min-w-full text-sm">
-          <thead className="surface-muted text-secondary text-xs uppercase">
-            <tr>
-              {[
-                "Asset Code",
-                "Make / Model",
-                "Serial No",
-                "Vendor",
-                "Warranty",
-                "Status",
-                "Actions",
-              ].map((h) => (
-                <th key={h} className="px-6 py-4 text-left">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
+          <TableHeader columns={tableColumns} />
 
           <tbody>
             {paginatedRows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={tableColumns.length}
                   className="px-6 py-8 text-center text-secondary"
                 >
                   No assets found
@@ -210,124 +438,7 @@ export default function AssetsPage() {
               </tr>
             ) : (
               paginatedRows.map((r) => (
-                <motion.tr
-                  key={r.id}
-                  whileHover={{ backgroundColor: "var(--surface-muted)" }}
-                  className="border-t border-default text-primary"
-                >
-                  <td className="px-6 py-4 font-medium">
-                    {r.asset_code}
-                  </td>
-                  <td className="px-6 py-4">{r.make} {r.model}</td>
-                  <td className="px-6 py-4">{r.serial_no}</td>
-                  <td className="px-6 py-4">{r.vendor || "-"}</td>
-                  <td className="px-6 py-4">
-                    {r.warranty_years ? `${r.warranty_years} yrs` : "-"}
-                  </td>
-                  <td className="px-6 py-4">
-                    <StatusBadge status={r.status} />
-                  </td>
-
-                  {/* Actions */}
-                  <td className="px-6 py-4">
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() =>
-                          router.push(`/dashboard/assets/${r.id}?mode=view`)
-                        }
-                        className={`
-                          px-3 py-1.5 rounded-lg text-xs font-medium
-                          surface border-default text-primary
-                          hover:surface-muted transition-colors
-                          flex items-center gap-1 shadow-sm
-                        `}
-                      >
-                        <Eye size={14} /> View
-                      </button>
-
-                      {r.status !== "GARBAGE" && (
-                        <button
-                          onClick={() =>
-                            router.push(`/dashboard/assets/${r.id}?mode=edit`)
-                          }
-                          className={`
-                            px-3 py-1.5 rounded-lg text-xs font-semibold
-                            gradient-accent text-white
-                            hover:opacity-90 transition-opacity
-                            flex items-center gap-1 shadow-md
-                          `}
-                        >
-                          <Edit size={14} /> Edit
-                        </button>
-                      )}
-
-                      {r.status === "IN_STOCK" && (
-                        <>
-                          <button
-                            onClick={() =>
-                              router.push(`/dashboard/issues/new?asset=${r.asset_code}`)
-                            }
-                            className={`
-                              px-3 py-1.5 rounded-lg text-xs font-medium
-                              surface border-default text-info
-                              hover:surface-muted transition-colors
-                              flex items-center gap-1 shadow-sm
-                            `}
-                          >
-                            <UserPlus size={14} /> Issue
-                          </button>
-
-                          <button
-                            onClick={() =>
-                              router.push(`/dashboard/garbage?asset=${r.asset_code}`)
-                            }
-                            className={`
-                              px-3 py-1.5 rounded-lg text-xs font-medium
-                              surface border-default text-danger
-                              hover:surface-muted transition-colors
-                              flex items-center gap-1 shadow-sm
-                            `}
-                          >
-                            <Trash2 size={14} /> Garbage
-                          </button>
-                        </>
-                      )}
-
-                      {r.status === "ISSUED" && (
-                        <>
-                          <button
-                            onClick={() =>
-                              router.push(`/dashboard/transfer/new?asset=${r.asset_code}`)
-                            }
-                            className={`
-                              px-3 py-1.5 rounded-lg text-xs font-medium
-                              surface border-default
-                              hover:surface-muted transition-colors
-                              flex items-center gap-1 shadow-sm
-                            `}
-                            style={{ color: 'var(--warning)' }}
-                          >
-                            <ArrowRightLeft size={14} /> Transfer
-                          </button>
-
-                          <button
-                            onClick={() =>
-                              router.push(`/dashboard/assets/return?issue=${r.issue_id}`)
-                            }
-                            className={`
-                              px-3 py-1.5 rounded-lg text-xs font-medium
-                              surface border-default text-secondary
-                              hover:surface-muted transition-colors
-                              flex items-center gap-1 shadow-sm
-                            `}
-                          >
-                            <RotateCcw size={14} /> Return
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </motion.tr>
+                <TableRow key={r.id} row={r} getActions={getActions} />
               ))
             )}
           </tbody>
@@ -337,44 +448,25 @@ export default function AssetsPage() {
       {/* Pagination Controls */}
       {filteredRows.length > 0 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
-          {/* Items per page */}
-          <div className="flex items-center gap-2 text-sm text-secondary">
-            <span>Show</span>
-            <select
-              value={itemsPerPage}
-              onChange={(e) => {
-                setItemsPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-              className="px-3 py-1.5 rounded-lg surface border-default text-primary focus:outline-none focus:ring-2 focus:ring-accent-soft"
-            >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-            <span>
-              per page • Showing {startIndex + 1}-{Math.min(endIndex, filteredRows.length)} of {filteredRows.length}
-            </span>
-          </div>
+          <ItemsPerPageSelect
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            totalItems={filteredRows.length}
+            startIndex={startIndex}
+            endIndex={endIndex}
+          />
 
           {/* Page navigation */}
           <div className="flex items-center gap-2">
-            <button
+            <PaginationButton
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1}
-              className={`
-                p-2 rounded-lg border-default transition-colors
-                ${
-                  currentPage === 1
-                    ? "surface-muted text-secondary cursor-not-allowed opacity-50"
-                    : "surface text-primary hover:surface-muted"
-                }
-              `}
             >
               <ChevronLeft size={18} />
-            </button>
+            </PaginationButton>
 
             {/* Page numbers */}
             <div className="flex items-center gap-1">
@@ -391,38 +483,23 @@ export default function AssetsPage() {
                 }
 
                 return (
-                  <button
+                  <PaginationButton
                     key={pageNum}
                     onClick={() => goToPage(pageNum)}
-                    className={`
-                      px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
-                      ${
-                        currentPage === pageNum
-                          ? "accent-bg accent border-default"
-                          : "surface text-primary hover:surface-muted border-default"
-                      }
-                    `}
+                    active={currentPage === pageNum}
                   >
                     {pageNum}
-                  </button>
+                  </PaginationButton>
                 );
               })}
             </div>
 
-            <button
+            <PaginationButton
               onClick={() => goToPage(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className={`
-                p-2 rounded-lg border-default transition-colors
-                ${
-                  currentPage === totalPages
-                    ? "surface-muted text-secondary cursor-not-allowed opacity-50"
-                    : "surface text-primary hover:surface-muted"
-                }
-              `}
             >
               <ChevronRight size={18} />
-            </button>
+            </PaginationButton>
           </div>
         </div>
       )}

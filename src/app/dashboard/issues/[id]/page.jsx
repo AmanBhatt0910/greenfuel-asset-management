@@ -6,6 +6,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, Edit, Save, FileText } from "lucide-react";
 import FormInput from "@/components/FormInput";
+import FormSelectSearchable from "@/components/FormSelectSearchable";
 
 export default function IssueDetailPage() {
   const router = useRouter();
@@ -19,32 +20,41 @@ export default function IssueDetailPage() {
 
   useEffect(() => {
     const fetchIssue = async () => {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`/api/issues/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) return;
-      const data = await res.json();
-      setIssue(data);
-      setLoading(false);
+      try {
+        const res = await fetch(`/api/issues/${id}`, {
+          credentials: "include",
+        });
+
+        if (res.status === 401) {
+          window.location.href = "/";
+          return;
+        }
+
+        if (!res.ok) return;
+        const data = await res.json();
+        setIssue(data);
+      } catch (err) {
+        console.error("Failed to fetch issue:", err);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchIssue();
   }, [id]);
 
   const onChange = (field, value) => {
-    setIssue((prev) => ({ ...prev, [field]: value }));
+    setIssue((prev) => ({ ...prev, [field]: value || "" }));
   };
 
   const onSave = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem("token");
       const res = await fetch(`/api/issues/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({
           employee_name: issue.employee_name,
           emp_code: issue.emp_code,
@@ -63,10 +73,25 @@ export default function IssueDetailPage() {
           os_version: issue.os_version,
           office_version: issue.office_version,
           antivirus: issue.antivirus,
+          windows_update: issue.windows_update,
+          local_admin_removed: issue.local_admin_removed,
+          printer_configured: issue.printer_configured,
+          sap: issue.sap,
+          backup_configured: issue.backup_configured,
+          zip_7: issue.zip_7,
+          chrome: issue.chrome,
+          onedrive: issue.onedrive,
+          laptop_bag: issue.laptop_bag,
           rmm_agent: issue.rmm_agent,
           physical_condition: issue.physical_condition,
         }),
       });
+
+      if (res.status === 401) {
+        window.location.href = "/";
+        return;
+      }
+
       if (res.ok) {
         router.replace(`/dashboard/issues/${id}?mode=view`);
       }
@@ -77,7 +102,190 @@ export default function IssueDetailPage() {
     }
   };
 
-  if (loading) return <div className="text-secondary">Loading issue…</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[color:var(--accent)]/30 border-t-[color:var(--accent)] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-secondary">Loading issue…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!issue) {
+    return <div className="text-secondary">Issue not found</div>;
+  }
+
+  // Configuration for form sections with field types and options
+  const sections = [
+    {
+      title: "Employee Information",
+      fields: [
+        { label: "Employee Name", key: "employee_name", type: "text", editable: true },
+        { label: "Employee Code", key: "emp_code", type: "text", editable: true },
+        { 
+          label: "Department", 
+          key: "department", 
+          type: "select", 
+          editable: true,
+          options: ["IT", "HR", "Finance", "Operations", "Sales", "Admin"]
+        },
+        { 
+          label: "Division", 
+          key: "division", 
+          type: "select", 
+          editable: true,
+          options: ["CNG", "BATTERY", "CORPORATE", "GUJARAT"]
+        },
+        { label: "Designation", key: "designation", type: "text", editable: true },
+        { label: "Location", key: "location", type: "text", editable: true },
+        { label: "Phone", key: "phone", type: "text", editable: true },
+        { label: "Email", key: "email", type: "email", editable: true },
+      ],
+    },
+    {
+      title: "Asset Details",
+      fields: [
+        { label: "Asset Code", key: "asset_code", type: "text", editable: false },
+        { label: "Make / Model", key: "make_model", type: "text", editable: false },
+        { label: "Serial No", key: "serial_no", type: "text", editable: false },
+      ],
+    },
+    {
+      title: "Technical / Remarks",
+      fields: [
+        { label: "IP Address", key: "ip_address", type: "text", editable: true },
+        { label: "OS / Software", key: "os_software", type: "text", editable: true },
+        { label: "Hostname", key: "hostname", type: "text", editable: true },
+        { label: "Remarks", key: "remarks", type: "text", editable: true },
+      ],
+    },
+    {
+      title: "OS & Software Configuration",
+      fields: [
+        { label: "OS Name", key: "os_name", type: "text", editable: true },
+        { label: "OS Version", key: "os_version", type: "text", editable: true },
+        { label: "Office Version", key: "office_version", type: "text", editable: true },
+        { label: "Antivirus", key: "antivirus", type: "text", editable: true },
+        { 
+          label: "Windows Update", 
+          key: "windows_update", 
+          type: "select", 
+          editable: true,
+          options: ["YES", "NO"]
+        },
+        { 
+          label: "Local Admin Removed", 
+          key: "local_admin_removed", 
+          type: "select", 
+          editable: true,
+          options: ["YES", "NO"]
+        },
+        { 
+          label: "Printer Configured", 
+          key: "printer_configured", 
+          type: "select", 
+          editable: true,
+          options: ["YES", "NO"]
+        },
+        { 
+          label: "SAP Installed", 
+          key: "sap", 
+          type: "select", 
+          editable: true,
+          options: ["YES", "NO"]
+        },
+        { 
+          label: "Backup Configured", 
+          key: "backup_configured", 
+          type: "select", 
+          editable: true,
+          options: ["YES", "NO"]
+        },
+        { 
+          label: "7-Zip Installed", 
+          key: "zip_7", 
+          type: "select", 
+          editable: true,
+          options: ["YES", "NO"]
+        },
+        { 
+          label: "Chrome Installed", 
+          key: "chrome", 
+          type: "select", 
+          editable: true,
+          options: ["YES", "NO"]
+        },
+        { 
+          label: "OneDrive Configured", 
+          key: "onedrive", 
+          type: "select", 
+          editable: true,
+          options: ["YES", "NO"]
+        },
+        { 
+          label: "Laptop Bag Provided", 
+          key: "laptop_bag", 
+          type: "select", 
+          editable: true,
+          options: ["YES", "NO"]
+        },
+        { label: "RMM Agent", key: "rmm_agent", type: "text", editable: true },
+        { label: "Physical Condition", key: "physical_condition", type: "text", editable: true },
+      ],
+    },
+  ];
+
+  // Render field based on type
+  const renderField = (field) => {
+    const isFieldEditable = field.editable && isEdit;
+    const fieldValue = issue[field.key] || "";
+
+    // Select fields with options (dropdowns)
+    if (field.type === "select" && field.options) {
+      // In view mode, show as regular input
+      if (!isFieldEditable) {
+        return (
+          <FormInput
+            key={field.key}
+            label={field.label}
+            value={fieldValue}
+            readOnly
+          />
+        );
+      }
+      
+      // In edit mode, show as searchable select
+      return (
+        <FormSelectSearchable
+          key={field.key}
+          label={field.label}
+          options={field.options}
+          value={fieldValue}
+          onChange={(e) => onChange(field.key, e.target.value)}
+          placeholder={`Select ${field.label.toLowerCase()}...`}
+          searchPlaceholder={`Search ${field.label.toLowerCase()}...`}
+        />
+      );
+    }
+
+    // Regular text/email inputs
+    return (
+      <FormInput
+        key={field.key}
+        label={field.label}
+        type={field.type || "text"}
+        value={fieldValue}
+        readOnly={!isFieldEditable}
+        onChange={
+          isFieldEditable
+            ? (e) => onChange(field.key, e.target.value)
+            : undefined
+        }
+      />
+    );
+  };
 
   return (
     <motion.div
@@ -100,25 +308,14 @@ export default function IssueDetailPage() {
         <div className="flex gap-2">
           <button
             onClick={() => router.push("/dashboard/issues")}
-            className={`
-              px-4 py-2 rounded-xl surface border-default
-              hover:surface-muted transition-colors
-              flex items-center gap-2
-            `}
+            className="px-4 py-2 rounded-xl surface border-default hover:surface-muted transition-colors flex items-center gap-2"
           >
             <ArrowLeft size={16} /> Back
           </button>
           {!isEdit && (
             <button
-              onClick={() =>
-                router.push(`/dashboard/issues/${id}?mode=edit`)
-              }
-              className={`
-                px-4 py-2 rounded-xl font-semibold
-                gradient-accent text-white
-                hover:opacity-90 transition-opacity
-                flex items-center gap-2
-              `}
+              onClick={() => router.push(`/dashboard/issues/${id}?mode=edit`)}
+              className="px-4 py-2 rounded-xl font-semibold gradient-accent text-white hover:opacity-90 transition-opacity flex items-center gap-2"
             >
               <Edit size={16} /> Edit
             </button>
@@ -126,148 +323,14 @@ export default function IssueDetailPage() {
         </div>
       </div>
 
-      {/* Employee Info (Editable) */}
-      <Section title="Employee Information">
-        <Grid>
-          <FormInput 
-            label="Employee Name" 
-            value={issue.employee_name} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("employee_name", e.target.value)} 
-          />
-          <FormInput 
-            label="Employee Code" 
-            value={issue.emp_code} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("emp_code", e.target.value)} 
-          />
-          <FormInput 
-            label="Department" 
-            value={issue.department} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("department", e.target.value)} 
-          />
-          <FormInput 
-            label="Division" 
-            value={issue.division} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("division", e.target.value)} 
-          />
-          <FormInput 
-            label="Designation" 
-            value={issue.designation} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("designation", e.target.value)} 
-          />
-          <FormInput 
-            label="Location" 
-            value={issue.location} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("location", e.target.value)} 
-          />
-          <FormInput 
-            label="Phone" 
-            value={issue.phone} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("phone", e.target.value)} 
-          />
-          <FormInput 
-            label="Email" 
-            value={issue.email} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("email", e.target.value)} 
-          />
-        </Grid>
-      </Section>
-
-      {/* Asset Info (ALWAYS READ ONLY) */}
-      <Section title="Asset Details">
-        <Grid>
-          <FormInput label="Asset Code" value={issue.asset_code} readOnly />
-          <FormInput label="Make / Model" value={issue.make_model} readOnly />
-          <FormInput label="Serial No" value={issue.serial_no} readOnly />
-        </Grid>
-      </Section>
-
-      {/* Technical */}
-      <Section title="Technical / Remarks">
-        <Grid>
-          <FormInput 
-            label="IP Address" 
-            value={issue.ip_address} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("ip_address", e.target.value)} 
-          />
-          <FormInput 
-            label="OS / Software" 
-            value={issue.os_software} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("os_software", e.target.value)} 
-          />
-          <FormInput 
-            label="Hostname" 
-            value={issue.hostname} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("hostname", e.target.value)} 
-          />
-          <FormInput 
-            label="Remarks" 
-            value={issue.remarks} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("remarks", e.target.value)} 
-          />
-        </Grid>
-      </Section>
-
-      <Section title="OS & Software Configuration">
-        <Grid>
-          <FormInput 
-            label="OS Name" 
-            value={issue.os_name} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("os_name", e.target.value)} 
-          />
-          <FormInput 
-            label="OS Version" 
-            value={issue.os_version} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("os_version", e.target.value)} 
-          />
-          <FormInput 
-            label="Office Version" 
-            value={issue.office_version} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("office_version", e.target.value)} 
-          />
-          <FormInput 
-            label="Antivirus" 
-            value={issue.antivirus} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("antivirus", e.target.value)} 
-          />
-          <FormInput label="Windows Update" value={issue.windows_update} readOnly />
-          <FormInput label="Local Admin Removed" value={issue.local_admin_removed} readOnly />
-          <FormInput label="Printer Configured" value={issue.printer_configured} readOnly />
-          <FormInput label="SAP" value={issue.sap} readOnly />
-          <FormInput label="Backup Configured" value={issue.backup_configured} readOnly />
-          <FormInput label="7-Zip" value={issue.zip_7} readOnly />
-          <FormInput label="Chrome" value={issue.chrome} readOnly />
-          <FormInput label="OneDrive" value={issue.onedrive} readOnly />
-          <FormInput label="Laptop Bag" value={issue.laptop_bag} readOnly />
-          <FormInput 
-            label="RMM Agent" 
-            value={issue.rmm_agent} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("rmm_agent", e.target.value)} 
-          />
-          <FormInput 
-            label="Physical Condition" 
-            value={issue.physical_condition} 
-            readOnly={!isEdit} 
-            onChange={(e)=>onChange("physical_condition", e.target.value)} 
-          />
-        </Grid>
-      </Section>
+      {/* Dynamic Sections */}
+      {sections.map((section) => (
+        <Section key={section.title} title={section.title}>
+          <Grid>
+            {section.fields.map(renderField)}
+          </Grid>
+        </Section>
+      ))}
 
       {/* Save Bar */}
       {isEdit && (
@@ -275,13 +338,7 @@ export default function IssueDetailPage() {
           <button
             onClick={onSave}
             disabled={saving}
-            className={`
-              px-6 py-3 rounded-xl font-semibold shadow-lg
-              gradient-accent text-white
-              hover:opacity-90 transition-opacity
-              flex items-center gap-2
-              disabled:opacity-50 disabled:cursor-not-allowed
-            `}
+            className="px-6 py-3 rounded-xl font-semibold shadow-lg gradient-accent text-white hover:opacity-90 transition-opacity flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save size={16} />
             {saving ? "Saving…" : "Save Changes"}
@@ -292,13 +349,11 @@ export default function IssueDetailPage() {
   );
 }
 
-/* Helpers */
+/* Helper Components */
 function Section({ title, children }) {
   return (
     <section className="surface-card p-6">
-      <h3 className="text-lg font-semibold accent mb-4">
-        {title}
-      </h3>
+      <h3 className="text-lg font-semibold accent mb-4">{title}</h3>
       {children}
     </section>
   );
@@ -306,8 +361,6 @@ function Section({ title, children }) {
 
 function Grid({ children }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {children}
-    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</div>
   );
 }

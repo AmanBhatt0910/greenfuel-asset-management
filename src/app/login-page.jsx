@@ -1,4 +1,4 @@
-// src/app/page.js
+// src/app/LoginPage.jsx
 "use client";
 
 import { useState } from "react";
@@ -26,6 +26,7 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include",
       });
 
       const data = await res.json();
@@ -36,12 +37,14 @@ export default function LoginPage() {
         return;
       }
 
-      localStorage.setItem("token", data.token);
-      router.push("/dashboard");
+      // Give the browser time to process the Set-Cookie header
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Force a full page reload to ensure cookie is sent with request
+      window.location.href = "/dashboard";
     } catch (err) {
       console.error(err);
       setError("Something went wrong!");
-    } finally {
       setLoading(false);
     }
   };

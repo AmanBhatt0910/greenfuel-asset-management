@@ -1,9 +1,8 @@
-// src/app/api/asssets/[id]/route.js
+// src/app/api/assets/[id]/route.js
 
 import pool from "@/lib/db";
 import { verifyAuth } from "@/lib/auth";
 
-// Helper to convert JS date/ISO to MySQL DATE
 const formatDate = (d) => {
   if (!d) return null;
   const date = new Date(d);
@@ -13,10 +12,11 @@ const formatDate = (d) => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
-export async function GET(req, { params }) {
+export async function GET(req, context) {
   const auth = verifyAuth(req);
   if (!auth.ok) return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
 
+  const params = await context.params; // ✅ FIXED: Await params
   const { id } = params;
 
   try {
@@ -36,10 +36,11 @@ export async function GET(req, { params }) {
   }
 }
 
-export async function PUT(req, { params }) {
+export async function PUT(req, context) {
   const auth = verifyAuth(req);
   if (!auth.ok) return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
 
+  const params = await context.params; // ✅ FIXED: Await params
   const { id } = params;
   const data = await req.json();
 

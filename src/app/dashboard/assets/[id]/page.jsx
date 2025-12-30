@@ -30,17 +30,20 @@ export default function AssetDetailPage() {
 
   useEffect(() => {
     const fetchAll = async () => {
-      const token = localStorage.getItem("token");
-
       try {
         const [assetRes, historyRes] = await Promise.all([
           fetch(`/api/assets/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: "include",
           }),
           fetch(`/api/assets/${id}/history`, {
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: "include",
           }),
         ]);
+
+        if (assetRes.status === 401 || historyRes.status === 401) {
+          window.location.href = "/";
+          return;
+        }
 
         const assetData = await assetRes.json();
         const historyData = await historyRes.json();
@@ -64,24 +67,45 @@ export default function AssetDetailPage() {
     e.preventDefault();
     setSaving(true);
 
-    const token = localStorage.getItem("token");
-    const res = await fetch(`/api/assets/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(form),
-    });
+    try {
+      const res = await fetch(`/api/assets/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(form),
+      });
 
-    setSaving(false);
-    if (res.ok) {
-      setMsg("Asset updated successfully");
-      router.replace(`/dashboard/assets/${id}?mode=view`);
+      if (res.status === 401) {
+        window.location.href = "/";
+        return;
+      }
+
+      setSaving(false);
+      if (res.ok) {
+        setMsg("Asset updated successfully");
+        router.replace(`/dashboard/assets/${id}?mode=view`);
+      } else {
+        setMsg("Failed to update asset");
+      }
+    } catch (err) {
+      console.error("Failed to update asset", err);
+      setMsg("Failed to update asset");
+      setSaving(false);
     }
   };
 
-  if (loading) return <p className="text-secondary">Loading asset…</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-[color:var(--accent)]/30 border-t-[color:var(--accent)] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-secondary">Loading asset…</p>
+        </div>
+      </div>
+    );
+  }
 
   const getEventMeta = (h) => {
     switch (h.event_type) {
@@ -241,7 +265,11 @@ export default function AssetDetailPage() {
         </div>
       )}
 
-      {msg && <p className="accent text-sm">{msg}</p>}
+      {msg && (
+        <div className={`p-4 rounded-xl text-sm ${msg.includes("success") ? "accent-bg accent" : "text-danger bg-red-50 dark:bg-red-900/20"}`}>
+          {msg}
+        </div>
+      )}
     </motion.div>
   );
 }

@@ -46,10 +46,13 @@ export default function Sidebar() {
     { name: "Logout", icon: <LogOut size={20} />, href: "/", isLogout: true },
   ];
 
-  const handleNavigation = (href, isLogout) => {
+  const handleNavigation = async (href, isLogout) => {
     if (isLogout) {
-      localStorage.removeItem("token");
-      router.push("/");
+      await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+
+      router.replace("/");
     } else {
       router.push(href);
     }
