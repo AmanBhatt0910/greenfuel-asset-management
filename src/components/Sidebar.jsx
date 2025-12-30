@@ -42,7 +42,6 @@ export default function Sidebar() {
   ];
 
   const accountMenu = [
-    { name: "Forgot Password", icon: <Lock size={20} />, href: "/forgot-password" },
     { name: "Logout", icon: <LogOut size={20} />, href: "/", isLogout: true },
   ];
 
