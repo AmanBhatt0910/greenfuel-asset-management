@@ -2,7 +2,7 @@
 
 "use client";
 import { useEffect, useState } from "react";
-import { Eye, Edit, Search, ArrowRight } from "lucide-react";
+import { Eye, Edit, Search, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 
@@ -11,6 +11,9 @@ export default function AssetIssuesList() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     const fetchIssues = async () => {
@@ -42,6 +45,52 @@ export default function AssetIssuesList() {
       .toLowerCase()
       .includes(search.toLowerCase())
   );
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = filtered.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
+  const goToPage = (page) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
 
   if (loading) {
     return (
@@ -92,6 +141,41 @@ export default function AssetIssuesList() {
         </div>
       </div>
 
+      {/* Results count and items per page */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-sm">
+        <div className="text-secondary">
+          Showing {filtered.length === 0 ? 0 : startIndex + 1} to{" "}
+          {Math.min(endIndex, filtered.length)} of {filtered.length} results
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <label htmlFor="itemsPerPage" className="text-secondary">
+            Per page:
+          </label>
+          <select
+            id="itemsPerPage"
+            value={itemsPerPage}
+            onChange={(e) => {
+              setItemsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className={`
+              px-3 py-1.5 rounded-lg
+              surface border-default
+              text-primary text-sm
+              focus:outline-none focus:ring-2 focus:ring-accent-soft
+              cursor-pointer
+            `}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </div>
+      </div>
+
       {/* Table */}
       <div className="overflow-x-auto surface-card backdrop-blur-xl">
         {filtered.length === 0 ? (
@@ -114,7 +198,7 @@ export default function AssetIssuesList() {
             </thead>
 
             <tbody>
-              {filtered.map((issue) => (
+              {currentItems.map((issue) => (
                 <tr
                   key={issue.id}
                   className="border-t border-default hover:accent-bg transition-colors"
@@ -190,6 +274,84 @@ export default function AssetIssuesList() {
           </table>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {filtered.length > 0 && totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          {/* Page info */}
+          <div className="text-sm text-secondary">
+            Page {currentPage} of {totalPages}
+          </div>
+
+          {/* Pagination buttons */}
+          <div className="flex items-center gap-2">
+            {/* Previous button */}
+            <button
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`
+                flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium
+                transition-all
+                ${
+                  currentPage === 1
+                    ? "surface-muted text-secondary cursor-not-allowed opacity-50"
+                    : "surface border-default text-primary hover:surface-card"
+                }
+              `}
+            >
+              <ChevronLeft size={16} />
+              Previous
+            </button>
+
+            <div className="hidden sm:flex items-center gap-1">
+              {getPageNumbers().map((page, index) => (
+                page === '...' ? (
+                  <span key={`ellipsis-${index}`} className="px-2 text-secondary">
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={page}
+                    onClick={() => goToPage(page)}
+                    className={`
+                      px-3 py-2 rounded-lg text-sm font-medium
+                      transition-all
+                      ${
+                        currentPage === page
+                          ? "gradient-accent text-white shadow-md"
+                          : "surface border-default text-primary hover:surface-card"
+                      }
+                    `}
+                  >
+                    {page}
+                  </button>
+                )
+              ))}
+            </div>
+
+            <div className="sm:hidden px-3 py-2 surface border-default rounded-lg text-sm font-medium text-primary">
+              {currentPage} / {totalPages}
+            </div>
+
+            <button
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`
+                flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium
+                transition-all
+                ${
+                  currentPage === totalPages
+                    ? "surface-muted text-secondary cursor-not-allowed opacity-50"
+                    : "surface border-default text-primary hover:surface-card"
+                }
+              `}
+            >
+              Next
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Footer hint */}
       {filtered.length > 0 && (
