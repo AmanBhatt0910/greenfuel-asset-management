@@ -111,6 +111,7 @@ const FieldBuilder = ({ field, formData, handleChange, assets, selectedAssetCode
       <FormSelectSearchable
         {...commonProps}
         options={field.options}
+        allowCustom={field.allowCustom}
         onChange={(e) => handleChange(field.name, e.target.value)}
         searchPlaceholder={`Search ${field.label.toLowerCase()}...`}
       />
@@ -241,12 +242,33 @@ export default function NewAssetIssueForm() {
       fields: [
         { label: "Employee Name", name: "employee_name" },
         { label: "Employee Code", name: "emp_code" },
-        { 
-          label: "Department", 
-          name: "department", 
+        {
+          label: "Department",
+          name: "department",
           type: "select",
-          options: ["IT", "HR", "Finance", "Operations", "Sales", "Admin"],
-          placeholder: "Select department...",
+          allowCustom: true,
+          placeholder: "Select or type department...",
+          options: [
+            "IT",
+            "HR",
+            "Finance",
+            "Operations",
+            "Sales",
+            "Admin",
+
+            // 🔽 Newly added
+            "Application Engineering",
+            "Production",
+            "Quality",
+            "Store",
+            "Service",
+            "Vendor Development",
+            "Security",
+            "Research & Development",
+            "Project",
+            "Purchase",
+            "Maintenance",
+          ],
         },
         { 
           label: "Division", 

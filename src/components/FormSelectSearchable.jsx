@@ -12,6 +12,7 @@ export default function FormSelectSearchable({
   placeholder = "Select...",
   searchPlaceholder = "Type to search...",
   disabled = false,
+  allowCustom = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,7 +34,7 @@ export default function FormSelectSearchable({
 
   // Get the label for the current value
   const selectedOption = normalizedOptions.find((opt) => opt.value === value);
-  const displayValue = selectedOption ? selectedOption.label : "";
+  const displayValue = selectedOption ? selectedOption.label : value || "";
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -129,7 +130,13 @@ export default function FormSelectSearchable({
                   type="text"
                   placeholder={searchPlaceholder}
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+
+                    if (allowCustom) {
+                      onChange({ target: { value: e.target.value } });
+                    }
+                  }}
                   className="
                     w-full pl-9 pr-3 py-2 rounded-lg
                     surface-muted border border-default
