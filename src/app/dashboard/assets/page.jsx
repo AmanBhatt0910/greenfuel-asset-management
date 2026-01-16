@@ -14,6 +14,7 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  Download,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -227,6 +228,7 @@ export default function AssetsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [downloadLoading, setDownloadLoading] = useState(false);
 
   useEffect(() => {
     const run = async () => {
@@ -287,6 +289,43 @@ export default function AssetsPage() {
 
   const goToPage = (page) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
+  };
+
+  // Download report function
+  const downloadReport = async () => {
+    setDownloadLoading(true);
+
+    try {
+      const res = await fetch("/api/reports?type=assets", {
+        credentials: "include",
+      });
+
+      if (res.status === 401) {
+        window.location.href = "/";
+        return;
+      }
+
+      if (!res.ok) {
+        alert("Failed to generate report");
+        setDownloadLoading(false);
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "assets-report.csv";
+      a.click();
+
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download report:", err);
+      alert("Failed to generate report");
+    } finally {
+      setDownloadLoading(false);
+    }
   };
 
   // Action configurations based on status
@@ -392,12 +431,30 @@ export default function AssetsPage() {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold text-primary">Asset Inventory</h2>
-        <p className="text-secondary text-sm">
-          View and manage all registered assets
-        </p>
+      {/* Header with Download Button */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-primary">Asset Inventory</h2>
+          <p className="text-secondary text-sm">
+            View and manage all registered assets
+          </p>
+        </div>
+        
+        <button
+          onClick={downloadReport}
+          disabled={downloadLoading}
+          className={`
+            px-5 py-2.5 rounded-lg font-semibold
+            gradient-accent text-white
+            hover:opacity-90 transition-opacity
+            flex items-center gap-2
+            disabled:opacity-50 disabled:cursor-not-allowed
+            shadow-md
+          `}
+        >
+          <Download size={16} />
+          {downloadLoading ? "Generating..." : "Download Report"}
+        </button>
       </div>
 
       {/* Filters */}
