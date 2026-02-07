@@ -74,18 +74,15 @@ export default function Reports() {
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
-            className={`
-              px-4 py-2.5 rounded-lg
-              surface border-default
-              text-primary
-              focus:outline-none focus:ring-2 focus:ring-accent-soft
-              transition-shadow flex-1
-            `}
+            className="px-4 py-2.5 rounded-lg surface border-default text-primary flex-1"
           >
             <option value="assets">All Assets</option>
             <option value="issued">Issued Assets</option>
             <option value="garbage">Garbage Assets</option>
             <option value="transfers">Transfer History</option>
+            <option value="software_inventory">Software Inventory</option>
+            <option value="software_assignments">Software Assignments</option>
+            <option value="software_seats">Software License Utilization</option>
           </select>
 
           <button
@@ -163,6 +160,20 @@ export default function Reports() {
           <ReportTypeCard
             title="Transfer History"
             description="Complete audit trail of asset transfers"
+          />
+          <ReportTypeCard
+            title="Software Inventory"
+            description="Complete list of all software and license information"
+          />
+
+          <ReportTypeCard
+            title="Software Assignments"
+            description="Track which software is assigned to which assets"
+          />
+
+          <ReportTypeCard
+            title="License Utilization"
+            description="Monitor license usage and availability"
           />
         </div>
       </div>

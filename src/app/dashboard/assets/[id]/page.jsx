@@ -14,6 +14,8 @@ import {
   RotateCcw,
   Trash2,
   Settings,
+  Plus,
+  X
 } from "lucide-react";
 
 export default function AssetDetailPage() {
@@ -28,32 +30,50 @@ export default function AssetDetailPage() {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState([]);
 
+  const [softwareList, setSoftwareList] = useState([]);
+  const [assignedSoftware, setAssignedSoftware] = useState([]);
+  const [selectedSoftware, setSelectedSoftware] = useState("");
+  const [softwareLoading, setSoftwareLoading] = useState(true);
+
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [assetRes, historyRes] = await Promise.all([
-          fetch(`/api/assets/${id}`, {
-            credentials: "include",
-          }),
-          fetch(`/api/assets/${id}/history`, {
-            credentials: "include",
-          }),
+        const [
+          assetRes,
+          historyRes,
+          softwareRes,
+          assignedRes,
+        ] = await Promise.all([
+          fetch(`/api/assets/${id}`, { credentials: "include" }),
+          fetch(`/api/assets/${id}/history`, { credentials: "include" }),
+          fetch(`/api/software`, { credentials: "include" }),
+          fetch(`/api/software/asset/${id}`, { credentials: "include" }),
         ]);
 
-        if (assetRes.status === 401 || historyRes.status === 401) {
+        if (
+          assetRes.status === 401 ||
+          historyRes.status === 401 ||
+          softwareRes.status === 401
+        ) {
           window.location.href = "/";
           return;
         }
 
         const assetData = await assetRes.json();
         const historyData = await historyRes.json();
+        const softwareData = await softwareRes.json();
+        const assignedData = await assignedRes.json();
 
         setForm(assetData);
         setHistory(historyData.timeline || []);
+        setSoftwareList(softwareData || []);
+        setAssignedSoftware(assignedData || []);
+
       } catch (err) {
-        console.error("Failed to load asset or history", err);
+        console.error(err);
       } finally {
         setLoading(false);
+        setSoftwareLoading(false);
       }
     };
 
@@ -93,6 +113,50 @@ export default function AssetDetailPage() {
       console.error("Failed to update asset", err);
       setMsg("Failed to update asset");
       setSaving(false);
+    }
+  };
+
+  const assignSoftware = async () => {
+    if (!selectedSoftware) return;
+
+    const res = await fetch("/api/software/assign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        software_id: selectedSoftware,
+        asset_id: id,
+      }),
+    });
+
+    if (res.ok) {
+
+      const updated = await fetch(`/api/software/asset/${id}`, {
+        credentials: "include",
+      });
+
+      setAssignedSoftware(await updated.json());
+      setSelectedSoftware("");
+
+    } else {
+      alert("Failed to assign software");
+    }
+  };
+
+  const removeSoftware = async (assignmentId) => {
+    const res = await fetch(`/api/software/assign/${assignmentId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    if (res.ok) {
+
+      setAssignedSoftware(prev =>
+        prev.filter(s => s.assignment_id !== assignmentId)
+      );
+
+    } else {
+      alert("Failed to remove software");
     }
   };
 
@@ -250,6 +314,89 @@ export default function AssetDetailPage() {
           </ol>
         )}
       </div>
+
+      {/* Software Section */}
+        <div className="surface border border-default rounded-2xl p-6">
+
+          <h3 className="text-lg font-semibold accent mb-4">
+            Installed Software
+          </h3>
+
+          {/* Assign Software */}
+          <div className="flex gap-2 mb-4">
+
+            <select
+              value={selectedSoftware}
+              onChange={(e) => setSelectedSoftware(e.target.value)}
+              className="surface border-default px-3 py-2 rounded-lg flex-1"
+            >
+              <option value="">Select Software</option>
+
+              {softwareList
+                .filter(s =>
+                  !assignedSoftware.some(a => a.id === s.id)
+                )
+                .map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} {s.version}
+                  </option>
+                ))
+              }
+
+            </select>
+
+            <button
+              onClick={assignSoftware}
+              className="gradient-accent text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            >
+              <Plus size={16}/>
+              Assign
+            </button>
+
+          </div>
+
+          {/* Assigned Software List */}
+          {assignedSoftware.length === 0 ? (
+            <p className="text-secondary text-sm">
+              No software assigned
+            </p>
+          ) : (
+
+            <div className="space-y-2">
+
+              {assignedSoftware.map(s => (
+
+                <div key={s.assignment_id}
+                  className="flex justify-between items-center surface-muted p-3 rounded-lg">
+
+                  <div>
+
+                    <div className="font-medium text-primary">
+                      {s.name} {s.version}
+                    </div>
+
+                    <div className="text-xs text-secondary">
+                      {s.vendor} • {s.license_type}
+                    </div>
+
+                  </div>
+
+                  <button
+                    onClick={() => removeSoftware(s.assignment_id)}
+                    className="text-danger"
+                  >
+                    <X size={16}/>
+                  </button>
+
+                </div>
+
+              ))}
+
+            </div>
+
+          )}
+
+        </div>
 
       {/* Sticky Save */}
       {isEdit && (

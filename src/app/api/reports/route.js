@@ -145,6 +145,71 @@ export async function GET(req) {
         `);
         break;
 
+      case "software_inventory":
+        filename = "software-inventory.csv";
+        [rows] = await pool.query(`
+          SELECT
+            s.name AS 'Software Name',
+            s.version AS 'Version',
+            s.vendor AS 'Vendor',
+            s.license_type AS 'License Type',
+            s.seats_total AS 'Total Seats',
+            s.seats_used AS 'Seats Used',
+            (s.total_seats - s.seats_used) AS 'Available Seats',
+            DATE_FORMAT(s.purchase_date, '%Y-%m-%d') AS 'Purchase Date',
+            DATE_FORMAT(s.expiry_date, '%Y-%m-%d') AS 'Expiry Date',
+            s.cost_per_license AS 'Cost Per License',
+            DATE_FORMAT(s.created_at, '%Y-%m-%d %H:%i:%s') AS 'Created At'
+          FROM software s
+          ORDER BY s.name
+        `);
+        break;
+
+      case "software_assignments":
+        filename = "software-assignments.csv";
+        [rows] = await pool.query(`
+          SELECT
+            s.name AS 'Software Name',
+            s.version AS 'Version',
+            a.asset_code AS 'Asset Code',
+            a.make AS 'Make',
+            a.model AS 'Model',
+            a.serial_no AS 'Serial Number',
+            DATE_FORMAT(sa.assigned_at, '%Y-%m-%d %H:%i:%s') AS 'Assigned At',
+            DATE_FORMAT(sa.removed_at, '%Y-%m-%d %H:%i:%s') AS 'Removed At',
+            CASE
+              WHEN sa.removed_at IS NULL THEN 'ACTIVE'
+              ELSE 'REMOVED'
+            END AS 'Status'
+          FROM software_assignments sa
+          JOIN software s ON sa.software_id = s.id
+          JOIN assets a ON sa.asset_id = a.id
+          ORDER BY sa.assigned_at DESC
+        `);
+        break;
+
+      case "software_seats":
+        filename = "software-license-utilization.csv";
+        [rows] = await pool.query(`
+          SELECT
+            s.name AS 'Software Name',
+            s.version AS 'Version',
+            s.seats_total AS 'Total Licenses',
+            s.seats_used AS 'Used Licenses',
+            (s.seats_total - s.seats_used) AS 'Available Licenses',
+            CONCAT(
+              ROUND(
+                (s.seats_used / NULLIF(s.seats_total,0)) * 100,
+                2
+              ),
+              '%'
+            ) AS 'Utilization'
+          FROM software s
+          WHERE s.deleted_at IS NULL
+          ORDER BY s.seats_used DESC
+        `);
+        break;
+
       default:
         return new Response("Invalid report type", { status: 400 });
     }

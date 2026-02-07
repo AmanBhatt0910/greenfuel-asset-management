@@ -199,21 +199,51 @@ export default function AssetHistory() {
         icon: Package,
         color: "accent",
       },
+
       ASSET_ISSUED: {
         label: "Asset Issued",
         icon: UserPlus,
         color: "text-info",
       },
+
       ASSET_TRANSFERRED: {
         label: "Asset Transferred",
         icon: ArrowRightLeft,
         color: "text-warning",
       },
+
       ASSET_GARBAGE: {
         label: "Marked as Garbage",
         icon: Trash2,
         color: "text-danger",
       },
+
+      /* SOFTWARE EVENTS */
+
+      SOFTWARE_REGISTERED: {
+        label: "Software Registered",
+        icon: Package,
+        color: "accent",
+      },
+
+      SOFTWARE_ASSIGNED: {
+        label: "Software Assigned",
+        icon: UserPlus,
+        color: "text-info",
+      },
+
+      SOFTWARE_REMOVED: {
+        label: "Software Removed",
+        icon: Trash2,
+        color: "text-danger",
+      },
+
+      SOFTWARE_UPDATED: {
+        label: "Software Updated",
+        icon: Package,
+        color: "text-warning",
+      },
+
     }),
     []
   );

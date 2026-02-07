@@ -1,3 +1,5 @@
+// api/software/route.js
+
 import pool from "@/lib/db";
 import { verifyAuth } from "@/lib/auth";
 import { logHistory } from "@/lib/history";
@@ -25,6 +27,7 @@ export async function GET(req) {
         seats_used,
         created_at
       FROM software
+      WHERE deleted_at IS NULL
       ORDER BY created_at DESC
     `);
 
