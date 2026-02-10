@@ -204,8 +204,7 @@ export default function SoftwarePage() {
                   shadow-lg hover:shadow-xl transition
                 "
               >
-
-                {/* Title */}
+                {/* Header */}
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
                     <h3 className="font-semibold text-primary text-lg">
@@ -218,114 +217,78 @@ export default function SoftwarePage() {
                       Version: {s.version || "-"}
                     </div>
                     <div className="text-xs text-secondary">
-                      License: {s.license_type}
+                      License Type: {s.license_type}
                     </div>
                   </div>
-                  <LicenseBadge usage={usage}/>
+
+                  <LicenseBadge usage={
+                    s.seats_total
+                      ? Math.round((s.seats_used / s.seats_total) * 100)
+                      : 0
+                  }/>
                 </div>
 
                 {/* License Key */}
-                  <div className="mt-3 text-xs text-secondary break-all">
-                    Key: {s.license_key || "-"}
-                  </div>
-
-                  {/* Dates */}
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-secondary">
-
-                    <div>
-                      Purchase: {s.purchase_date
-                        ? new Date(s.purchase_date).toLocaleDateString()
-                        : "-"
-                      }
-                    </div>
-
-                    <div>
-                      Expiry: {s.expiry_date
-                        ? new Date(s.expiry_date).toLocaleDateString()
-                        : "-"
-                      }
-                    </div>
-
-                  </div>
-
-                  {/* Seats */}
-                  <div className="mt-4">
-
-                    <div className="flex justify-between text-xs mb-1">
-
-                      <span>
-                        {s.seats_used}/{s.seats_total} used
-                      </span>
-
-                      <span className={isHigh ? "text-danger" : "text-secondary"}>
-                        {usage}%
-                      </span>
-
-                    </div>
-
-                    <div className="w-full h-2 surface-muted rounded-full">
-
-                      <div
-                        className={`h-2 rounded-full ${
-                          isHigh ? "bg-red-500" : "bg-[var(--accent)]"
-                        }`}
-                        style={{ width: `${usage}%` }}
-                      />
-
-                    </div>
-
-                  </div>
-
-                  {/* Footer */}
-                  <div className="mt-3 text-xs text-secondary">
-                    Created: {new Date(s.created_at).toLocaleDateString()}
-                  </div>
-
-
-                {/* Version */}
-                <div className="mt-3 text-sm text-secondary">
-                  Version: {s.version || "-"}
+                <div className="mt-3 text-xs text-secondary break-all">
+                  License Key: {s.license_key || "-"}
                 </div>
 
-                {/* License type */}
-                <div className="text-sm text-secondary">
-                  License: {s.license_type}
+                {/* Dates */}
+                <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-secondary">
+                  <div>
+                    Purchase: {s.purchase_date
+                      ? new Date(s.purchase_date).toLocaleDateString()
+                      : "-"
+                    }
+                  </div>
+
+                  <div>
+                    Expiry: {s.expiry_date
+                      ? new Date(s.expiry_date).toLocaleDateString()
+                      : "-"
+                    }
+                  </div>
                 </div>
 
-                {/* Seats */}
+                {/* Seats usage */}
                 <div className="mt-4">
+                  {(() => {
+                    const usage = s.seats_total
+                      ? Math.round((s.seats_used / s.seats_total) * 100)
+                      : 0;
+                    const isHigh = usage >= 80;
+                    return (
+                      <>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span>
+                            {s.seats_used}/{s.seats_total} used
+                          </span>
+                          <span className={
+                            isHigh
+                              ? "text-danger"
+                              : "text-secondary"
+                          }>
+                            {usage}%
+                          </span>
+                        </div>
+                        <div className="w-full h-2 surface-muted rounded-full">
+                          <div
+                            className={`h-2 rounded-full ${
+                              isHigh
+                                ? "bg-red-500"
+                                : "bg-[var(--accent)]"
+                            }`}
+                            style={{ width: `${usage}%` }}
+                          />
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
 
-                  <div className="flex justify-between text-xs mb-1">
-
-                    <span>
-                      {s.seats_used}/{s.seats_total} used
-                    </span>
-
-                    <span
-                      className={
-                        isHigh
-                          ? "text-danger"
-                          : "text-secondary"
-                      }
-                    >
-                      {usage}%
-                    </span>
-
-                  </div>
-
-                  <div className="w-full h-2 surface-muted rounded-full">
-
-                    <div
-                      className={`h-2 rounded-full transition-all ${
-                        isHigh
-                          ? "bg-red-500"
-                          : "bg-[var(--accent)]"
-                      }`}
-                      style={{ width: `${usage}%` }}
-                    />
-
-                  </div>
-
+                {/* Created date */}
+                <div className="mt-3 text-xs text-secondary">
+                  Created: {new Date(s.created_at).toLocaleDateString()}
                 </div>
 
                 {/* Actions */}
@@ -347,27 +310,32 @@ export default function SoftwarePage() {
                       icon={Trash2}
                       danger
                       onClick={async () => {
-
                         if (!confirm("Delete this software?"))
                           return;
 
-                        const res = await fetch(`/api/software/${s.id}`, {
-                          method: "DELETE",
-                          credentials: "include",
-                        });
-
+                        const res = await fetch(
+                          `/api/software/${s.id}`,
+                          {
+                            method: "DELETE",
+                            credentials: "include",
+                          }
+                        );
                         if (res.ok)
-                          setRows(rows.filter(r => r.id !== s.id));
+                          setRows(prev =>
+                            prev.filter(r => r.id !== s.id)
+                          );
                         else
                           alert("Delete failed");
-
                       }}
                     />
                   </div>
-                  {/* Installed Assets Button */}
+
+                  {/* Installed assets */}
                   <button
                     onClick={() =>
-                      router.push(`/dashboard/software/${s.id}/assets`)
+                      router.push(
+                        `/dashboard/software/${s.id}/assets`
+                      )
                     }
                     className="
                       flex items-center gap-2
