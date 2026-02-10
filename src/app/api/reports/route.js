@@ -158,7 +158,6 @@ export async function GET(req) {
             (s.seats_total - s.seats_used) AS 'Available Seats',
             DATE_FORMAT(s.purchase_date, '%Y-%m-%d') AS 'Purchase Date',
             DATE_FORMAT(s.expiry_date, '%Y-%m-%d') AS 'Expiry Date',
-            s.cost_per_license AS 'Cost Per License',
             DATE_FORMAT(s.created_at, '%Y-%m-%d %H:%i:%s') AS 'Created At'
           FROM software s
           ORDER BY s.name
