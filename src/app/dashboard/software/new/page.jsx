@@ -335,20 +335,26 @@ function Field({
 
     <div className="space-y-1">
 
-      <label className="text-xs text-secondary">
+      <label htmlFor={name} className="text-xs text-secondary">
         {label}
         {required && <span className="accent"> *</span>}
       </label>
 
       <input
+        id={name}
         type={type}
         name={name}
         value={value || ""}
         onChange={onChange}
         className="
           w-full px-4 py-2 rounded-xl
-          surface border-default text-sm
-          focus:ring-2 focus:ring-accent-soft
+          surface border border-default
+          text-sm text-primary
+          placeholder:text-secondary
+          focus:outline-none
+          focus:ring-2 focus:ring-[color:var(--accent-soft)]
+          focus:border-[color:var(--accent)]
+          transition-all
         "
       />
 
@@ -370,21 +376,29 @@ function SelectField({
 
     <div className="space-y-1">
 
-      <label className="text-xs text-secondary">
+      <label htmlFor={name} className="text-xs text-secondary">
         {label}
       </label>
-
+      
       <select
+        id={name}
         name={name}
         value={value}
         onChange={onChange}
         className="
           w-full px-4 py-2 rounded-xl
-          surface border-default text-sm
+          surface border border-default
+          text-sm text-primary
+          focus:outline-none
+          focus:ring-2 focus:ring-[color:var(--accent-soft)]
+          focus:border-[color:var(--accent)]
+          transition-all
         "
       >
         {options.map(o =>
-          <option key={o} value={o}>{o}</option>
+          <option key={o} value={o}>
+            {o}
+          </option>
         )}
       </select>
 
@@ -409,7 +423,13 @@ function TextArea({
       rows={4}
       className="
         w-full px-4 py-2 rounded-xl
-        surface border-default text-sm
+        surface border border-default
+        text-sm text-primary
+        placeholder:text-secondary
+        focus:outline-none
+        focus:ring-2 focus:ring-[color:var(--accent-soft)]
+        focus:border-[color:var(--accent)]
+        transition-all
       "
     />
 
