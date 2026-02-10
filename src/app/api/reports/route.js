@@ -155,7 +155,7 @@ export async function GET(req) {
             s.license_type AS 'License Type',
             s.seats_total AS 'Total Seats',
             s.seats_used AS 'Seats Used',
-            (s.total_seats - s.seats_used) AS 'Available Seats',
+            (s.seats_total - s.seats_used) AS 'Available Seats',
             DATE_FORMAT(s.purchase_date, '%Y-%m-%d') AS 'Purchase Date',
             DATE_FORMAT(s.expiry_date, '%Y-%m-%d') AS 'Expiry Date',
             s.cost_per_license AS 'Cost Per License',
@@ -241,7 +241,20 @@ export async function GET(req) {
       },
     });
   } catch (err) {
-    console.error("REPORT ERROR:", err);
-    return new Response("Failed to generate report", { status: 500 });
+    if (err.code === "ER_DUP_ENTRY") {
+      return new Response(
+        JSON.stringify({
+          message: "This license key already exists"
+        }),
+        { status: 409 }
+      );
+    }
+    console.error(err);
+    return new Response(
+      JSON.stringify({
+        message: "Failed to register software"
+      }),
+      { status: 500 }
+    );
   }
 }
