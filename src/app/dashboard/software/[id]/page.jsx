@@ -271,8 +271,35 @@ export default function SoftwareDetailPage() {
         />
 
         <Field
+          label="License Key"
+          name="license_key"
+          value={form.license_key}
+          disabled={!isEdit}
+          onChange={onChange}
+        />
+
+        <Field
+          label="Purchase Date"
+          name="purchase_date"
+          type="date"
+          value={form.purchase_date?.split("T")[0]}
+          disabled={!isEdit}
+          onChange={onChange}
+        />
+
+        <Field
+          label="Expiry Date"
+          name="expiry_date"
+          type="date"
+          value={form.expiry_date?.split("T")[0]}
+          disabled={!isEdit}
+          onChange={onChange}
+        />
+
+        <Field
           label="Total Seats"
           name="seats_total"
+          type="number"
           value={form.seats_total}
           disabled={!isEdit}
           onChange={onChange}
@@ -283,6 +310,14 @@ export default function SoftwareDetailPage() {
           name="seats_used"
           value={form.seats_used}
           disabled
+        />
+
+        <Field
+          label="Notes"
+          name="notes"
+          value={form.notes}
+          disabled={!isEdit}
+          onChange={onChange}
         />
 
       </div>
@@ -405,11 +440,10 @@ function Field({
   name,
   value,
   disabled,
-  onChange
+  onChange,
+  type = "text"
 }) {
-
   return (
-
     <div className="space-y-1">
 
       <label className="text-xs text-secondary">
@@ -417,13 +451,14 @@ function Field({
       </label>
 
       <input
+        type={type}
         name={name}
         value={value || ""}
         disabled={disabled}
         onChange={onChange}
         className={`
           w-full px-4 py-2 rounded-xl text-sm
-          border-default transition
+          border border-default transition
           ${
             disabled
               ? "surface-muted text-secondary"
@@ -433,7 +468,5 @@ function Field({
       />
 
     </div>
-
   );
-
 }

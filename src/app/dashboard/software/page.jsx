@@ -207,22 +207,80 @@ export default function SoftwarePage() {
 
                 {/* Title */}
                 <div className="flex justify-between items-start">
-
-                  <div>
-
+                  <div className="space-y-1">
                     <h3 className="font-semibold text-primary text-lg">
                       {s.name}
                     </h3>
+                    <div className="text-xs text-secondary">
+                      Vendor: {s.vendor || "-"}
+                    </div>
+                    <div className="text-xs text-secondary">
+                      Version: {s.version || "-"}
+                    </div>
+                    <div className="text-xs text-secondary">
+                      License: {s.license_type}
+                    </div>
+                  </div>
+                  <LicenseBadge usage={usage}/>
+                </div>
 
-                    <p className="text-xs text-secondary">
-                      {s.vendor || "Unknown vendor"}
-                    </p>
+                {/* License Key */}
+                  <div className="mt-3 text-xs text-secondary break-all">
+                    Key: {s.license_key || "-"}
+                  </div>
+
+                  {/* Dates */}
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs text-secondary">
+
+                    <div>
+                      Purchase: {s.purchase_date
+                        ? new Date(s.purchase_date).toLocaleDateString()
+                        : "-"
+                      }
+                    </div>
+
+                    <div>
+                      Expiry: {s.expiry_date
+                        ? new Date(s.expiry_date).toLocaleDateString()
+                        : "-"
+                      }
+                    </div>
 
                   </div>
 
-                  <LicenseBadge usage={usage}/>
+                  {/* Seats */}
+                  <div className="mt-4">
 
-                </div>
+                    <div className="flex justify-between text-xs mb-1">
+
+                      <span>
+                        {s.seats_used}/{s.seats_total} used
+                      </span>
+
+                      <span className={isHigh ? "text-danger" : "text-secondary"}>
+                        {usage}%
+                      </span>
+
+                    </div>
+
+                    <div className="w-full h-2 surface-muted rounded-full">
+
+                      <div
+                        className={`h-2 rounded-full ${
+                          isHigh ? "bg-red-500" : "bg-[var(--accent)]"
+                        }`}
+                        style={{ width: `${usage}%` }}
+                      />
+
+                    </div>
+
+                  </div>
+
+                  {/* Footer */}
+                  <div className="mt-3 text-xs text-secondary">
+                    Created: {new Date(s.created_at).toLocaleDateString()}
+                  </div>
+
 
                 {/* Version */}
                 <div className="mt-3 text-sm text-secondary">
