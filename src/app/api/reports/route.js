@@ -149,20 +149,36 @@ export async function GET(req) {
         filename = "software-inventory.csv";
         [rows] = await pool.query(`
           SELECT
+            s.id AS 'Software ID',
             s.name AS 'Software Name',
-            s.version AS 'Version',
-            s.vendor AS 'Vendor',
+            COALESCE(s.version, '-') AS 'Version',
+            COALESCE(s.vendor, '-') AS 'Vendor',
             s.license_type AS 'License Type',
-            s.seats_total AS 'Total Seats',
-            s.seats_used AS 'Seats Used',
-            (s.seats_total - s.seats_used) AS 'Available Seats',
+            COALESCE(s.license_key, '-') AS 'License Key',
+            COALESCE(s.seats_total, 0) AS 'Total Seats',
+            COALESCE(s.seats_used, 0) AS 'Seats Used',
+            (COALESCE(s.seats_total,0) - COALESCE(s.seats_used,0)) AS 'Available Seats',
+            CONCAT(
+              ROUND(
+                (COALESCE(s.seats_used,0) /
+                NULLIF(COALESCE(s.seats_total,0),0)) * 100,
+                2
+              ),
+              '%'
+            ) AS 'Utilization',
             DATE_FORMAT(s.purchase_date, '%Y-%m-%d') AS 'Purchase Date',
             DATE_FORMAT(s.expiry_date, '%Y-%m-%d') AS 'Expiry Date',
-            DATE_FORMAT(s.created_at, '%Y-%m-%d %H:%i:%s') AS 'Created At'
+            COALESCE(REPLACE(REPLACE(s.notes, '\n',' '), '\r',' '), '-') AS 'Notes',
+            DATE_FORMAT(s.created_at, '%Y-%m-%d %H:%i:%s') AS 'Created At',
+            CASE
+              WHEN s.deleted_at IS NULL THEN 'ACTIVE'
+              ELSE 'DELETED'
+            END AS 'Record Status',
+            DATE_FORMAT(s.deleted_at, '%Y-%m-%d %H:%i:%s') AS 'Deleted At'
           FROM software s
-          ORDER BY s.name
+          ORDER BY s.created_at DESC
         `);
-        break;
+      break;
 
       case "software_assignments":
         filename = "software-assignments.csv";
