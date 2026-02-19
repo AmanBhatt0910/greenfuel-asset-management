@@ -5,11 +5,10 @@ import { verifyAuth } from "@/lib/auth";
 import { logHistory } from "@/lib/history";
 
 /* ============================
-   GET — List all software
-============================ */
-/* ============================
-   GET — List available software
-   (Only remaining seats)
+   GET — List software
+   - Default → All software
+   - ?available=true → Only remaining seats
+   - ?asset_id=1 → Exclude already assigned
 ============================ */
 export async function GET(req) {
   const auth = verifyAuth(req);
@@ -18,7 +17,9 @@ export async function GET(req) {
 
   try {
     const { searchParams } = new URL(req.url);
-    const assetId = searchParams.get("asset_id"); // optional
+
+    const assetId = searchParams.get("asset_id");
+    const onlyAvailable = searchParams.get("available") === "true";
 
     let query = `
       SELECT
@@ -35,12 +36,14 @@ export async function GET(req) {
         s.created_at
       FROM software s
       WHERE s.deleted_at IS NULL
-      AND s.seats_used < s.seats_total
     `;
 
     const params = [];
 
-    // If called from asset page, exclude already assigned software
+    if (onlyAvailable) {
+      query += ` AND s.seats_used < s.seats_total `;
+    }
+
     if (assetId) {
       query += `
         AND s.id NOT IN (
@@ -53,7 +56,7 @@ export async function GET(req) {
       params.push(assetId);
     }
 
-    query += " ORDER BY s.created_at DESC";
+    query += ` ORDER BY s.created_at DESC`;
 
     const [rows] = await pool.query(query, params);
 
@@ -67,6 +70,7 @@ export async function GET(req) {
     );
   }
 }
+
 
 /* ============================
    POST — Register software

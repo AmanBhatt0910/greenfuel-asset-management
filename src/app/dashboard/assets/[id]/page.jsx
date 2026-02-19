@@ -46,7 +46,7 @@ export default function AssetDetailPage() {
         ] = await Promise.all([
           fetch(`/api/assets/${id}`, { credentials: "include" }),
           fetch(`/api/assets/${id}/history`, { credentials: "include" }),
-          fetch(`/api/software?asset_id=${id}`, { credentials: "include" }),
+          fetch(`/api/software?available=true&asset_id=${id}`, {credentials: "include"}),
           fetch(`/api/software/asset/${id}`, { credentials: "include" }),
         ]);
 
