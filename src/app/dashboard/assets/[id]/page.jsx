@@ -46,7 +46,7 @@ export default function AssetDetailPage() {
         ] = await Promise.all([
           fetch(`/api/assets/${id}`, { credentials: "include" }),
           fetch(`/api/assets/${id}/history`, { credentials: "include" }),
-          fetch(`/api/software`, { credentials: "include" }),
+          fetch(`/api/software?asset_id=${id}`, { credentials: "include" }),
           fetch(`/api/software/asset/${id}`, { credentials: "include" }),
         ]);
 
@@ -332,16 +332,17 @@ export default function AssetDetailPage() {
             >
               <option value="">Select Software</option>
 
-              {softwareList
-                .filter(s =>
-                  !assignedSoftware.some(a => a.id === s.id)
-                )
-                .map(s => (
+              {softwareList.map(s => {
+                const last4 = s.license_key
+                  ? s.license_key.slice(-4)
+                  : "----";
+
+                return (
                   <option key={s.id} value={s.id}>
-                    {s.name} {s.version}
+                    {s.name} {s.version || ""} • {s.vendor || ""} • KEY: ****{last4}
                   </option>
-                ))
-              }
+                );
+              })}
 
             </select>
 

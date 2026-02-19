@@ -7,34 +7,64 @@ import { logHistory } from "@/lib/history";
 /* ============================
    GET — List all software
 ============================ */
+/* ============================
+   GET — List available software
+   (Only remaining seats)
+============================ */
 export async function GET(req) {
   const auth = verifyAuth(req);
   if (!auth.ok)
     return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
 
   try {
-    const [rows] = await pool.query(`
+    const { searchParams } = new URL(req.url);
+    const assetId = searchParams.get("asset_id"); // optional
+
+    let query = `
       SELECT
-        id,
-        name,
-        version,
-        vendor,
-        license_type,
-        license_key,
-        purchase_date,
-        expiry_date,
-        seats_total,
-        seats_used,
-        created_at
-      FROM software
-      WHERE deleted_at IS NULL
-      ORDER BY created_at DESC
-    `);
+        s.id,
+        s.name,
+        s.version,
+        s.vendor,
+        s.license_type,
+        s.license_key,
+        s.purchase_date,
+        s.expiry_date,
+        s.seats_total,
+        s.seats_used,
+        s.created_at
+      FROM software s
+      WHERE s.deleted_at IS NULL
+      AND s.seats_used < s.seats_total
+    `;
+
+    const params = [];
+
+    // If called from asset page, exclude already assigned software
+    if (assetId) {
+      query += `
+        AND s.id NOT IN (
+          SELECT sa.software_id
+          FROM software_assignments sa
+          WHERE sa.asset_id = ?
+          AND sa.removed_at IS NULL
+        )
+      `;
+      params.push(assetId);
+    }
+
+    query += " ORDER BY s.created_at DESC";
+
+    const [rows] = await pool.query(query, params);
 
     return new Response(JSON.stringify(rows), { status: 200 });
+
   } catch (err) {
     console.error("GET /api/software error:", err);
-    return new Response(JSON.stringify({ message: "Failed to fetch software" }), { status: 500 });
+    return new Response(
+      JSON.stringify({ message: "Failed to fetch software" }),
+      { status: 500 }
+    );
   }
 }
 
