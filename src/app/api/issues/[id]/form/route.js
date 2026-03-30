@@ -1,15 +1,15 @@
 // src/app/api/issues/[id]/form/route.js
 export const runtime = "nodejs";
 import pool from "@/lib/db";
-import { verifyAuth } from "@/lib/auth";
+import { checkPermission } from "@/lib/auth";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
 import fs from "fs/promises";
 import path from "path";
 
 export async function GET(req, ctx) {
   /* ================= AUTH ================= */
-  const auth = verifyAuth(req);
-  if (!auth.ok) return new Response("Unauthorized", { status: 401 });
+  const auth = await checkPermission(req, "view_issues");
+  if (!auth.ok) return new Response(auth.error, { status: auth.error === "Unauthorized" ? 401 : 403 });
 
   /* ================= PARAM ================= */
   const { id: issueId } = await ctx.params;

@@ -1,12 +1,12 @@
 // src/app/api/reports/route.js
 
 import pool from "@/lib/db";
-import { verifyAuth } from "@/lib/auth";
+import { checkPermission } from "@/lib/auth";
 
 export async function GET(req) {
-  const auth = verifyAuth(req);
+  const auth = await checkPermission(req, "view_reports");
   if (!auth.ok) {
-    return new Response("Unauthorized", { status: 401 });
+    return new Response(auth.error, { status: auth.error === "Unauthorized" ? 401 : 403 });
   }
 
   const { searchParams } = new URL(req.url);

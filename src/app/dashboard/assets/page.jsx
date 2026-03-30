@@ -229,6 +229,14 @@ export default function AssetsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [downloadLoading, setDownloadLoading] = useState(false);
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.role) setUserRole(data.role); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const run = async () => {
@@ -328,6 +336,9 @@ export default function AssetsPage() {
     }
   };
 
+  // Derived role flags
+  const canManageAssets = userRole === "admin" || userRole === "manager";
+
   // Action configurations based on status
   const getActions = (row) => {
     const actions = [
@@ -342,7 +353,7 @@ export default function AssetsPage() {
       },
     ];
 
-    if (row.status !== "GARBAGE") {
+    if (canManageAssets && row.status !== "GARBAGE") {
       actions.push({
         component: ActionButton,
         props: {
@@ -354,7 +365,7 @@ export default function AssetsPage() {
       });
     }
 
-    if (row.status === "IN_STOCK") {
+    if (canManageAssets && row.status === "IN_STOCK") {
       actions.push(
         {
           component: ActionButton,
@@ -377,7 +388,7 @@ export default function AssetsPage() {
       );
     }
 
-    if (row.status === "ISSUED") {
+    if (canManageAssets && row.status === "ISSUED") {
       actions.push(
         {
           component: ActionButton,

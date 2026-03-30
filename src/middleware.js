@@ -35,6 +35,12 @@ export async function middleware(req) {
     try {
       const secret = new TextEncoder().encode(process.env.JWT_SECRET);
       const { payload } = await jwtVerify(token, secret);
+
+      // Admin-only pages — redirect non-admins to dashboard
+      if (pathname.startsWith("/dashboard/users") && payload.role !== "admin") {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
+
       return NextResponse.next();
     } catch (err) {
       // Invalid token, redirect to login

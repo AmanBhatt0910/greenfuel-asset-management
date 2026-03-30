@@ -1,16 +1,16 @@
 // src/app/api/issues/route.js
 
 import pool from "@/lib/db";
-import { verifyAuth } from "@/lib/auth";
+import { checkPermission } from "@/lib/auth";
 import { logHistory } from "@/lib/history";
 
 /* ============================
    GET — Fetch all issued assets
 ============================ */
 export async function GET(req) {
-  const auth = verifyAuth(req);
+  const auth = await checkPermission(req, "view_issues");
   if (!auth.ok) {
-    return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+    return new Response(JSON.stringify({ message: auth.error }), { status: auth.error === "Unauthorized" ? 401 : 403 });
   }
 
   try {
@@ -75,9 +75,9 @@ export async function GET(req) {
    POST — Issue asset
 ============================ */
 export async function POST(req) {
-  const auth = verifyAuth(req);
+  const auth = await checkPermission(req, "manage_issues");
   if (!auth.ok) {
-    return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+    return new Response(JSON.stringify({ message: auth.error }), { status: auth.error === "Unauthorized" ? 401 : 403 });
   }
 
   const conn = await pool.getConnection();

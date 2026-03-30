@@ -1,13 +1,13 @@
 // src/app/api/software/[id]/route.js
 
 import pool from "@/lib/db";
-import { verifyAuth } from "@/lib/auth";
+import { checkPermission } from "@/lib/auth";
 import { logHistory } from "@/lib/history";
 
 export async function GET(req, context) {
-  const auth = verifyAuth(req);
+  const auth = await checkPermission(req, "view_software");
   if (!auth.ok)
-    return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+    return new Response(JSON.stringify({ message: auth.error }), { status: auth.error === "Unauthorized" ? 401 : 403 });
 
   const { id } = await context.params;
 
@@ -28,9 +28,9 @@ export async function GET(req, context) {
 }
 
 export async function PUT(req, context) {
-  const auth = verifyAuth(req);
+  const auth = await checkPermission(req, "manage_software");
   if (!auth.ok)
-    return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+    return new Response(JSON.stringify({ message: auth.error }), { status: auth.error === "Unauthorized" ? 401 : 403 });
 
   const { id } = await context.params;
   const data = await req.json();
@@ -77,12 +77,12 @@ export async function PUT(req, context) {
 
 export async function DELETE(req, context) {
 
-  const auth = verifyAuth(req);
+  const auth = await checkPermission(req, "manage_software");
 
   if (!auth.ok)
     return new Response(
       JSON.stringify({ message: auth.error }),
-      { status: 401 }
+      { status: auth.error === "Unauthorized" ? 401 : 403 }
     );
 
   const { id } = context.params;

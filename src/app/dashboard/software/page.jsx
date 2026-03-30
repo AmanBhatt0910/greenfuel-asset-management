@@ -24,6 +24,14 @@ export default function SoftwarePage() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [userRole, setUserRole] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.role) setUserRole(data.role); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
 
@@ -112,6 +120,7 @@ export default function SoftwarePage() {
 
         </div>
 
+        {(userRole === "admin" || userRole === "manager") && (
         <button
           onClick={() => router.push("/dashboard/software/new")}
           className="
@@ -123,6 +132,7 @@ export default function SoftwarePage() {
           <Plus size={18}/>
           Register Software
         </button>
+        )}
 
       </div>
 
@@ -300,12 +310,15 @@ export default function SoftwarePage() {
                         router.push(`/dashboard/software/${s.id}`)
                       }
                     />
+                    {(userRole === "admin" || userRole === "manager") && (
                     <ActionButton
                       icon={Edit}
                       onClick={() =>
                         router.push(`/dashboard/software/${s.id}?mode=edit`)
                       }
                     />
+                    )}
+                    {userRole === "admin" && (
                     <ActionButton
                       icon={Trash2}
                       danger
@@ -328,6 +341,7 @@ export default function SoftwarePage() {
                           alert("Delete failed");
                       }}
                     />
+                    )}
                   </div>
 
                   {/* Installed assets */}
