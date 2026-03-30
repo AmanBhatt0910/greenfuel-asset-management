@@ -39,9 +39,13 @@ export default function LoginPage() {
 
       // Give the browser time to process the Set-Cookie header
       await new Promise(resolve => setTimeout(resolve, 200));
-      
-      // Force a full page reload to ensure cookie is sent with request
-      window.location.href = "/dashboard";
+
+      // If this is a first login, force the user to change their password
+      if (data.must_change_password) {
+        window.location.href = "/dashboard/change-password";
+      } else {
+        window.location.href = "/dashboard";
+      }
     } catch (err) {
       console.error(err);
       setError("Something went wrong!");

@@ -20,7 +20,9 @@ import {
   PlusSquare,
   History,
   LayoutDashboard,
-  Laptop
+  Laptop,
+  Users,
+  KeyRound,
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -30,10 +32,21 @@ export default function Sidebar() {
 
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [userRole, setUserRole] = useState(null);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    // Fetch current user role from the /api/auth/me endpoint
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.role) setUserRole(data.role); })
+      .catch(() => {});
+  }, []);
 
   if (!mounted) return null;
+
+  const isAdmin = userRole === "admin";
+  const isAdminOrManager = isAdmin || userRole === "manager";
 
   /* ---------------------------
      Navigation Groups
@@ -60,36 +73,42 @@ export default function Sidebar() {
           icon: Package,
           href: "/dashboard/assets"
         },
-        {
-          name: "Register Asset",
-          icon: PlusSquare,
-          href: "/dashboard/assets/new"
-        },
+        ...(isAdminOrManager ? [
+          {
+            name: "Register Asset",
+            icon: PlusSquare,
+            href: "/dashboard/assets/new"
+          },
+        ] : []),
         {
           name: "Issues",
           icon: FileText,
           href: "/dashboard/issues"
         },
-        {
-          name: "Issue Asset",
-          icon: FileText,
-          href: "/dashboard/issues/new"
-        },
-        {
-          name: "Transfer Request",
-          icon: Repeat,
-          href: "/dashboard/transfer/new"
-        },
+        ...(isAdminOrManager ? [
+          {
+            name: "Issue Asset",
+            icon: FileText,
+            href: "/dashboard/issues/new"
+          },
+          {
+            name: "Transfer Request",
+            icon: Repeat,
+            href: "/dashboard/transfer/new"
+          },
+        ] : []),
         {
           name: "Transfer History",
           icon: History,
           href: "/dashboard/transfer/history"
         },
-        {
-          name: "Garbage",
-          icon: Trash2,
-          href: "/dashboard/garbage"
-        }
+        ...(isAdminOrManager ? [
+          {
+            name: "Garbage",
+            icon: Trash2,
+            href: "/dashboard/garbage"
+          }
+        ] : [])
       ]
     },
 
@@ -101,11 +120,13 @@ export default function Sidebar() {
           icon: Laptop,
           href: "/dashboard/software"
         },
-        {
-          name: "Register Software",
-          icon: PlusSquare,
-          href: "/dashboard/software/new"
-        }
+        ...(isAdminOrManager ? [
+          {
+            name: "Register Software",
+            icon: PlusSquare,
+            href: "/dashboard/software/new"
+          }
+        ] : [])
       ]
     },
 
@@ -123,11 +144,29 @@ export default function Sidebar() {
           href: "/dashboard/history"
         }
       ]
-    }
+    },
+
+    ...(isAdmin ? [
+      {
+        title: "Administration",
+        items: [
+          {
+            name: "User Management",
+            icon: Users,
+            href: "/dashboard/users"
+          }
+        ]
+      }
+    ] : [])
 
   ];
 
   const accountSection = [
+    {
+      name: "Change Password",
+      icon: KeyRound,
+      href: "/dashboard/change-password"
+    },
     {
       name: "Logout",
       icon: LogOut,
@@ -251,7 +290,7 @@ export default function Sidebar() {
 
                 const isActive =
                   pathname === item.href ||
-                  pathname.startsWith(item.href);
+                  (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));
 
                 const Icon = item.icon;
 
@@ -335,13 +374,15 @@ export default function Sidebar() {
             <button
               key={item.name}
               onClick={() => navigate(item)}
-              className="
+              className={`
                 w-full flex items-center gap-3
                 px-3 py-2.5 rounded-xl
-                text-danger
-                hover:bg-red-500/10
                 transition
-              "
+                ${item.logout
+                  ? "text-danger hover:bg-red-500/10"
+                  : "text-secondary hover:surface-muted"
+                }
+              `}
             >
 
               <Icon size={18}/>
@@ -360,6 +401,23 @@ export default function Sidebar() {
 
       </div>
 
+      {/* Role badge */}
+
+      {!collapsed && userRole && (
+
+        <div className="px-3 pb-2">
+          <div className="
+            text-center text-xs
+            px-3 py-1.5 rounded-lg
+            surface-muted border border-default
+            text-secondary capitalize
+          ">
+            Logged in as <span className="accent font-semibold">{userRole}</span>
+          </div>
+        </div>
+
+      )}
+
       {/* Version */}
 
       {!collapsed && (
@@ -369,7 +427,7 @@ export default function Sidebar() {
           <div className="
             text-center text-xs text-secondary
           ">
-            Version 2.1.0
+            Version 2.2.0
           </div>
 
         </div>
