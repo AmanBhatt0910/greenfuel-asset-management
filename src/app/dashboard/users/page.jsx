@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
@@ -406,10 +407,23 @@ function ResetPasswordModal({ user, onClose }) {
    Main Page
 =========================== */
 export default function UsersPage() {
+  const router = useRouter();
   const [users,   setUsers]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
   const [modal,   setModal]   = useState(null); // { type: 'create'|'edit'|'reset', user? }
+
+  // Redirect non-admin users away from this page
+  useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data && data.role !== "admin") {
+          router.replace("/dashboard");
+        }
+      })
+      .catch(() => {});
+  }, [router]);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);

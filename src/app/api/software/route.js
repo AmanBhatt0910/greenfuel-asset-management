@@ -1,7 +1,7 @@
 // api/software/route.js
 
 import pool from "@/lib/db";
-import { verifyAuth } from "@/lib/auth";
+import { checkPermission } from "@/lib/auth";
 import { logHistory } from "@/lib/history";
 
 /* ============================
@@ -11,9 +11,9 @@ import { logHistory } from "@/lib/history";
    - ?asset_id=1 → Exclude already assigned
 ============================ */
 export async function GET(req) {
-  const auth = verifyAuth(req);
+  const auth = await checkPermission(req, "view_software");
   if (!auth.ok)
-    return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+    return new Response(JSON.stringify({ message: auth.error }), { status: auth.error === "Unauthorized" ? 401 : 403 });
 
   try {
     const { searchParams } = new URL(req.url);
@@ -76,9 +76,9 @@ export async function GET(req) {
    POST — Register software
 ============================ */
 export async function POST(req) {
-  const auth = verifyAuth(req);
+  const auth = await checkPermission(req, "manage_software");
   if (!auth.ok)
-    return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+    return new Response(JSON.stringify({ message: auth.error }), { status: auth.error === "Unauthorized" ? 401 : 403 });
 
   try {
     const data = await req.json();

@@ -11,9 +11,17 @@ export default function AssetIssuesList() {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [userRole, setUserRole] = useState(null);
   
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (data?.role) setUserRole(data.role); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const fetchIssues = async () => {
@@ -249,7 +257,8 @@ export default function AssetIssuesList() {
                         View
                       </button>
 
-                      {/* Edit */}
+                      {/* Edit — managers and admins only */}
+                      {(userRole === "admin" || userRole === "manager") && (
                       <button
                         onClick={() =>
                           router.push(
@@ -266,6 +275,7 @@ export default function AssetIssuesList() {
                         <Edit size={14} />
                         Edit
                       </button>
+                      )}
                     </div>
                   </td>
                 </tr>

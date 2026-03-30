@@ -1,7 +1,7 @@
 // src/app/api/assets/[id]/route.js
 
 import pool from "@/lib/db";
-import { verifyAuth } from "@/lib/auth";
+import { checkPermission } from "@/lib/auth";
 
 const formatDate = (d) => {
   if (!d) return null;
@@ -13,8 +13,8 @@ const formatDate = (d) => {
 };
 
 export async function GET(req, context) {
-  const auth = verifyAuth(req);
-  if (!auth.ok) return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+  const auth = await checkPermission(req, "view_assets");
+  if (!auth.ok) return new Response(JSON.stringify({ message: auth.error }), { status: auth.error === "Unauthorized" ? 401 : 403 });
 
   const params = await context.params; // ✅ FIXED: Await params
   const { id } = params;
@@ -37,8 +37,8 @@ export async function GET(req, context) {
 }
 
 export async function PUT(req, context) {
-  const auth = verifyAuth(req);
-  if (!auth.ok) return new Response(JSON.stringify({ message: auth.error }), { status: 401 });
+  const auth = await checkPermission(req, "manage_assets");
+  if (!auth.ok) return new Response(JSON.stringify({ message: auth.error }), { status: auth.error === "Unauthorized" ? 401 : 403 });
 
   const params = await context.params; // ✅ FIXED: Await params
   const { id } = params;
